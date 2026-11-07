@@ -8,6 +8,8 @@ Astro static site on Netlify, started from `rajesh-hub/templates/site`. Prices c
 |---|---|
 | `/` | Home: what we make, how ordering works, FAQ (with FAQ structured data) |
 | `/custom-box/` | **Price your box**: size, grade, printing, quantity, pincode → live 3D box, price per box, quantity slabs, BS, weight, delivery, GST, total. Order on WhatsApp or send as enquiry. Inputs are kept in the URL, so a link can be shared. |
+| `/products/` | **Boxes in packs**: standard sizes from BoxBook (More → Products), 3D box, BS, weight, pack prices; add to cart. Built with the products at build time, refreshed live in the browser. |
+| `/cart/` | Cart (this browser): packs, delivery by pincode, GST, total; pay online through `checkout-cart` (server prices it again with box-core `priceCart`). |
 | `/box-strength-calculator/` | Free BS / weight / cut size / deckle calculator (search traffic) |
 | `/contact/` | Enquiry form (Netlify Forms), pre-filled from the price page. Each accepted submission is also saved to Supabase `enquiries` by `netlify/functions/submission-created.mts`, so it appears in the BoxBook app's Inbox |
 | `/account/` | **My orders**: buyer signs in with mobile number + SMS code (MSG91, via Supabase), gives name/company/GSTIN/address, sees orders with status and amount due, downloads GST invoices (made in the browser with box-core), orders again. Off until the Supabase variables are set. |
@@ -52,6 +54,7 @@ Server functions in `netlify/functions` (logic in `netlify/lib/shop.ts`, tested 
 | `checkout-custom` | price page → "Order & pay online" | prices the box again on the server, creates the website order (`web_create_order`), Razorpay order for the advance % (100% by default) |
 | `verify-payment` | browser after paying | checks Razorpay's signature (key secret, `order_id|payment_id`) and records the payment if captured |
 | `razorpay-webhook` | Razorpay | checks `X-Razorpay-Signature` (webhook secret) and records `order.paid` / `payment_link.paid` once (`record_razorpay_payment`) |
+| `checkout-cart` | cart → "Pay online" | prices the cart again from `products` (stock and packs checked), creates the order, Razorpay order |
 | `payment-link` | BoxBook app → "Send payment link" | office staff only; Razorpay payment link for the amount due |
 
 Setup:

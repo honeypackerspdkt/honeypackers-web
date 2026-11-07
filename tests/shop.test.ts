@@ -27,6 +27,11 @@ function reset() {
       { id: 'z-own', org_id: ORG, name: 'Pudukkottai', pincode_from: 622001, pincode_to: 622999, mode: 'own', rate_per_kg: '4', min_charge: '300', free_above: null, days: 1, active: true, sort: 0, deleted_at: null },
       { id: 'z-tn', org_id: ORG, name: 'Tamil Nadu', pincode_from: 600000, pincode_to: 643999, mode: 'courier', rate_per_kg: '0', min_charge: '0', free_above: null, days: 4, active: true, sort: 1, deleted_at: null },
     ],
+    products: [
+      { id: 'prod-1', org_id: ORG, name: '3 ply box 300×200×150 mm', ply: 3, spec: { length: 300, width: 200, height: 150, ply: 3, perLayer: false, layers: [{ gsm: 120, bf: 18, price: 0 }] }, packs: [{ qty: 25, price: 450 }, { qty: 100, price: 1600 }], hsn: '48191010', tax_pct: 5, stock_qty: null, active: true, deleted_at: null },
+      { id: 'prod-2', org_id: ORG, name: 'Few left', ply: 3, spec: { length: 200, width: 150, height: 100, ply: 3, perLayer: false, layers: [{ gsm: 120, bf: 18, price: 0 }] }, packs: [{ qty: 50, price: 600 }], hsn: '48191010', tax_pct: 5, stock_qty: 60, active: true, deleted_at: null },
+      { id: 'prod-off', org_id: ORG, name: 'Hidden', ply: 3, spec: { length: 1, width: 1, height: 1, ply: 3, perLayer: false, layers: [] }, packs: [{ qty: 1, price: 1 }], active: false, deleted_at: null },
+    ],
     user_profiles: [
       { id: 'u-staff', role: 'Sales', is_active: true, organization_id: ORG },
       { id: 'u-prod', role: 'Production', is_active: true, organization_id: ORG },
@@ -212,5 +217,31 @@ describe('payment links from the app', () => {
     const pre = await shop().paymentLink(new Request('https://site/x', { method: 'OPTIONS' }));
     expect(pre.status).toBe(204);
     expect(pre.headers.get('access-control-allow-headers')).toContain('authorization');
+  });
+});
+
+describe('cart of standard products', () => {
+  it('prices the cart on the server and creates the order with pack lines', async () => {
+    const r = await shop().checkoutCart(post('buyer', { lines: [{ productId: 'prod-1', packQty: 100, count: 2, price: 1 }], pincode: '622001' }));
+    const out = await r.json();
+    expect(r.status, JSON.stringify(out)).toBe(200);
+    const made = db.orders.at(-1)!;
+    expect(db.order_items.filter((i) => i.order_id === made.id).map((i) => [i.description, i.qty, i.rate, i.unit])).toEqual([
+      ['3 ply box 300×200×150 mm (pack of 100)', 2, 1600, 'Pack'],
+      ['Delivery (Pudukkottai)', 1, 300], // 31.702 kg × ₹4 = ₹126.81 → minimum ₹300
+    ].map((x) => (x.length === 3 ? [...x, undefined] : x)));
+    // (3,200 + 300) × 1.05 = 3,675
+    expect(out.amount).toBe(367500);
+  });
+
+  it('refuses switched-off products, missing packs, too many boxes and empty carts', async () => {
+    const err = async (lines: unknown[], pincode = '622001') => (await (await shop().checkoutCart(post('buyer', { lines, pincode }))).json()).error;
+    expect(await err([{ productId: 'prod-off', packQty: 1, count: 1 }])).toMatch(/no longer sold/);
+    expect(await err([{ productId: 'prod-1', packQty: 30, count: 1 }])).toMatch(/pack size/);
+    expect(await err([{ productId: 'prod-2', packQty: 50, count: 2 }])).toMatch(/only 60 boxes/);
+    expect(await err([])).toMatch(/empty/);
+    expect(await err([{ productId: 'prod-1', packQty: 25, count: 1 }], '600001')).toMatch(/Courier/);
+    expect((await shop().checkoutCart(post(null, { lines: [{ productId: 'prod-1', packQty: 25, count: 1 }] }))).status).toBe(401);
+    expect(db.orders).toHaveLength(1);
   });
 });

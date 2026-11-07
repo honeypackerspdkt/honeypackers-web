@@ -1,0 +1,20 @@
+{
+  "_note": "SAMPLE PRODUCTS AND PRICES ONLY, used until products are added in the BoxBook app (More > Products) and Supabase is live.",
+  "products": [
+    {
+      "id": "sample-3ply-small", "slug": "3-ply-box-200x150x100-mm", "name": "3 ply box 200×150×100 mm", "description": "Small shipping box for accessories, cosmetics and e-commerce parcels.",
+      "ply": 3, "spec": { "length": 200, "width": 150, "height": 100, "ply": 3, "perLayer": false, "layers": [{ "gsm": 120, "bf": 18, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }] },
+      "packs": [{ "qty": 50, "price": 600 }, { "qty": 200, "price": 2100 }], "hsn": "48191010", "tax_pct": 5, "stock_qty": null, "active": true, "sort": 0
+    },
+    {
+      "id": "sample-3ply-medium", "slug": "3-ply-box-300x200x150-mm", "name": "3 ply box 300×200×150 mm", "description": "Everyday carton for garments, footwear and FMCG packs.",
+      "ply": 3, "spec": { "length": 300, "width": 200, "height": 150, "ply": 3, "perLayer": false, "layers": [{ "gsm": 120, "bf": 18, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }] },
+      "packs": [{ "qty": 25, "price": 450 }, { "qty": 100, "price": 1600 }], "hsn": "48191010", "tax_pct": 5, "stock_qty": null, "active": true, "sort": 1
+    },
+    {
+      "id": "sample-5ply-large", "slug": "5-ply-box-400x300x300-mm", "name": "5 ply box 400×300×300 mm", "description": "Strong carton for heavier goods and stacking in warehouses.",
+      "ply": 5, "spec": { "length": 400, "width": 300, "height": 300, "ply": 5, "perLayer": false, "layers": [{ "gsm": 150, "bf": 20, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }, { "gsm": 0, "bf": 0, "price": 0 }] },
+      "packs": [{ "qty": 10, "price": 520 }, { "qty": 50, "price": 2400 }], "hsn": "48191010", "tax_pct": 5, "stock_qty": 300, "active": true, "sort": 2
+    }
+  ]
+}

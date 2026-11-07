@@ -21,8 +21,8 @@ export const waHref = (number: string, text?: string) => `https://wa.me/${number
 
 export const nav = [
   { href: '/custom-box/', label: 'Price your box' },
+  { href: '/products/', label: 'Boxes in packs' },
   { href: '/box-strength-calculator/', label: 'Strength calculator' },
-  { href: '/#range', label: 'Boxes we make' },
   { href: '/contact/', label: 'Contact' },
   { href: '/account/', label: 'My orders' },
 ];

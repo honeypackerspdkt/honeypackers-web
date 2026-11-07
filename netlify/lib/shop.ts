@@ -2,11 +2,12 @@
 // Prices and amounts are always worked out here (box-core), never taken from the browser.
 // Pure apart from the injected fetch, so it is tested with fake Supabase / Razorpay (tests/shop.test.ts).
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { advanceAmount, checkoutTotals, deliveryCharge, findZone, gradeLabel, priceCustomBox, type WebShop } from '@honeypackers/box-core/pricing';
+import { advanceAmount, checkoutTotals, deliveryCharge, findZone, gradeLabel, priceCart, priceCustomBox, type CartLine, type WebShop } from '@honeypackers/box-core/pricing';
 import { defaultCompany } from '@honeypackers/box-core/company';
 import type { BoxSpec } from '@honeypackers/box-core/types';
 import { orderView, ordersFromRows } from '../../src/lib/account';
 import { fromDb, type DeliveryZoneRow, type PriceRulesRow } from '../../src/lib/price-list';
+import { productFromRow } from '../../src/lib/products';
 
 export interface ShopEnv {
   SUPABASE_URL: string;
@@ -221,6 +222,44 @@ export function createShop(d: ShopDeps) {
         p_notes: 'Ordered on the website',
       });
       const total = checkoutTotals(p.amount, delivery, TAX_PCT).total;
+      return json(200, await checkoutFor(made.id, made.number, advanceAmount(total, shop.advancePct), u.phone, ''));
+    }),
+
+    /** Buyer checks out the cart of standard products. Body: { lines: [{ productId, packQty, count }], pincode } */
+    checkoutCart: wrap(async (req) => {
+      const u = await c.user(req);
+      const b = await body(req);
+      const cart = (Array.isArray(b.lines) ? b.lines : []).slice(0, 50) as CartLine[];
+      if (!cart.length) bad(400, 'Your cart is empty.');
+      const [rules] = await c.rest<PriceRulesRow[]>(`price_rules?org_id=eq.${org}&select=rules,advance_pct,min_order_value,show_prices`);
+      if (!rules) bad(503, 'Online ordering is not open yet.');
+      const zones = await c.rest<DeliveryZoneRow[]>(`delivery_zones?org_id=eq.${org}&active=eq.true&deleted_at=is.null&select=*`);
+      const shop: WebShop = fromDb(rules, zones);
+      if (!shop.showPrices) bad(400, 'Online prices are switched off. Please send an enquiry.');
+      const products = (await c.rest<Row[]>(`products?org_id=eq.${org}&active=eq.true&deleted_at=is.null&select=*`)).map(productFromRow);
+      const priced = priceCart(cart, products);
+      if (priced.problems.length) bad(409, priced.problems[0].message);
+      const pin = String(b.pincode || '').replace(/\s/g, '');
+      const zone = findZone(shop.zones, pin);
+      if (!zone) bad(400, "We don't deliver to this pincode online yet. Please send an enquiry.");
+      const delivery = deliveryCharge(zone, priced.weightKg, priced.goods);
+      if (delivery == null) bad(400, 'Courier delivery is priced by enquiry for now. Please send an enquiry.');
+      if (shop.minOrderValue > 0 && priced.goods < shop.minOrderValue) bad(400, `The minimum online order is ₹${shop.minOrderValue} before GST.`);
+
+      await c.linkBuyer(req);
+      const items = [
+        ...priced.lines.map((l) => ({ description: `${l.product.name} (pack of ${l.pack.qty})`, qty: l.count, rate: l.pack.price, hsn: l.product.hsn || '48191010', unit: 'Pack', spec: publicSpec(l.product.spec) })),
+        ...(delivery > 0 ? [{ description: `Delivery (${zone.name})`, qty: 1, rate: delivery }] : []),
+      ];
+      const made = await c.rpc<{ id: string; number: string }>('web_create_order', {
+        p_org: org,
+        p_user: u.id,
+        p_items: items,
+        p_delivery: { pincode: pin, zone: zone.name, mode: zone.mode, charge: delivery, days: zone.days },
+        p_tax_pct: TAX_PCT,
+        p_notes: 'Ordered on the website (standard boxes)',
+      });
+      const total = checkoutTotals(priced.goods, delivery, TAX_PCT).total;
       return json(200, await checkoutFor(made.id, made.number, advanceAmount(total, shop.advancePct), u.phone, ''));
     }),
 

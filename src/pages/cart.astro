@@ -1,0 +1,154 @@
+---
+import Base from '../layouts/Base.astro';
+const live = Boolean(import.meta.env.PUBLIC_SUPABASE_URL && import.meta.env.PUBLIC_SHOP_ORG_ID);
+---
+
+<Base title="Your cart" description="Boxes you have chosen, delivery and GST, and online payment.">
+  <section class="section" style="padding-top:32px">
+    <div class="container" style="max-width:820px" data-cart data-live={live ? '1' : ''}>
+      <h1>Your cart</h1>
+      <p class="notice" data-sample-note hidden>These are <strong>sample products and prices</strong>; online payment opens when our shop is live.</p>
+      <div data-empty hidden class="card"><p style="margin:0">Your cart is empty. <a href="/products/">See boxes in packs</a> or <a href="/custom-box/">price any size</a>.</p></div>
+      <div data-full hidden>
+        <div class="card" data-lines></div>
+        <div class="card form-grid" style="margin-top:16px">
+          <label class="field" style="max-width:260px"><span>Delivery pincode</span><input name="pincode" inputmode="numeric" maxlength="6" placeholder="e.g. 622001" autocomplete="postal-code" /></label>
+          <dl class="kv">
+            <dt>Boxes</dt><dd data-goods>—</dd>
+            <dt>Delivery</dt><dd data-delivery>Enter pincode</dd>
+            <dt>GST 5%</dt><dd data-gst>—</dd>
+            <dt class="total">Total</dt><dd class="total" data-total>—</dd>
+          </dl>
+          <p class="small muted" data-note style="margin:0"></p>
+          <p class="notice" data-problems hidden style="margin:0"></p>
+          <div class="btn-row">
+            <button class="btn btn--primary" type="button" data-pay disabled>Pay online</button>
+            <a class="btn btn--ghost" href="/products/">Add more</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { checkoutTotals, deliveryCharge, findZone, priceCart, type WebShop } from '@honeypackers/box-core/pricing';
+  import type { Product } from '@honeypackers/box-core/types';
+  import { loadProducts, readCart, writeCart } from '../lib/products';
+  import { liveConfig, loadPriceList } from '../lib/price-list';
+
+  const root = document.querySelector<HTMLElement>('[data-cart]')!;
+  const $ = <T extends HTMLElement = HTMLElement>(s: string) => root.querySelector<T>(s)!;
+  const inr = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const rs = (n: number) => `₹${inr.format(n)}`;
+  const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+  const pinInput = $<HTMLInputElement>('[name=pincode]');
+  const payBtn = $<HTMLButtonElement>('[data-pay]');
+  let products: Product[] = [];
+  let shop: WebShop | null = null;
+  let live = false;
+  try {
+    pinInput.value = localStorage.getItem('hp-pincode') || '';
+  } catch {
+    /* ignore */
+  }
+
+  function render() {
+    const cart = readCart();
+    $('[data-empty]').hidden = cart.length > 0;
+    $('[data-full]').hidden = cart.length === 0;
+    if (!cart.length) return;
+    const priced = priceCart(cart, products);
+    $('[data-lines]').innerHTML = priced.lines
+      .map(
+        (l) => `<div class="cart-line">
+          <div><strong>${esc(l.product.name)}</strong><div class="small muted">Pack of ${l.pack.qty} · ${rs(l.pack.price)} a pack · ${l.boxes.toLocaleString('en-IN')} boxes</div></div>
+          <div style="text-align:right;font-weight:700">${rs(l.amount)}</div>
+          <div class="cart-line__qty"><button type="button" aria-label="One pack less" data-step="-1" data-id="${esc(l.product.id)}" data-pack="${l.pack.qty}">−</button><span>${l.count}</span><button type="button" aria-label="One pack more" data-step="1" data-id="${esc(l.product.id)}" data-pack="${l.pack.qty}">+</button></div>
+          <div style="text-align:right"><button class="linkish small" type="button" data-remove data-id="${esc(l.product.id)}" data-pack="${l.pack.qty}">Remove</button></div>
+        </div>`,
+      )
+      .join('');
+    const problems = $('[data-problems]');
+    problems.hidden = !priced.problems.length;
+    problems.innerHTML = priced.problems.map((p) => esc(p.message)).join('<br>');
+
+    const pin = pinInput.value.replace(/\D/g, '');
+    let delivery: number | null = null;
+    let note = '';
+    if (/^\d{6}$/.test(pin) && shop) {
+      const zone = findZone(shop.zones, pin);
+      if (!zone) note = "We don't deliver to this pincode online yet. Please send an enquiry.";
+      else {
+        delivery = deliveryCharge(zone, priced.weightKg, priced.goods);
+        note = delivery == null ? 'Courier delivery is priced by enquiry for now.' : zone.mode === 'pickup' ? 'Collect from our factory.' : `Our vehicle, ${zone.name}, about ${zone.days} day${zone.days === 1 ? '' : 's'} · ${Math.round(priced.weightKg)} kg`;
+      }
+    }
+    const t = checkoutTotals(priced.goods, delivery ?? 0, 5);
+    $('[data-goods]').textContent = rs(priced.goods);
+    $('[data-delivery]').textContent = delivery == null ? (pin.length === 6 ? 'Ask us' : 'Enter pincode') : delivery === 0 ? 'Free' : rs(delivery);
+    $('[data-gst]').textContent = rs(t.tax);
+    $('[data-total]').textContent = rs(t.total);
+    const min = shop?.minOrderValue || 0;
+    if (min > 0 && priced.goods < min) note = `Minimum online order is ₹${min} before GST. ${note}`;
+    $('[data-note]').textContent = note;
+    payBtn.disabled = !(live && delivery != null && !priced.problems.length && priced.lines.length && !(min > 0 && priced.goods < min));
+  }
+
+  root.addEventListener('click', (e) => {
+    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-step],[data-remove]');
+    if (!el) return;
+    const id = el.dataset.id!;
+    const pack = Number(el.dataset.pack);
+    const step = Number(el.dataset.step || 0);
+    const next = readCart()
+      .map((l) => (l.productId === id && l.packQty === pack ? { ...l, count: el.hasAttribute('data-remove') ? 0 : Math.min(1000, l.count + step) } : l))
+      .filter((l) => l.count > 0);
+    writeCart(next);
+    render();
+  });
+  pinInput.addEventListener('input', () => {
+    try {
+      localStorage.setItem('hp-pincode', pinInput.value);
+    } catch {
+      /* ignore */
+    }
+    render();
+  });
+
+  payBtn.addEventListener('click', async () => {
+    payBtn.disabled = true;
+    const note = $('[data-problems]');
+    try {
+      const [{ accessToken }, { callFn, pay }] = await Promise.all([import('../lib/account-api'), import('../lib/pay')]);
+      const token = await accessToken();
+      if (!token) {
+        location.href = '/account/?return=/cart/';
+        return;
+      }
+      const start = await callFn<import('../lib/pay').CheckoutStart>('checkout-cart', token, { lines: readCart(), pincode: pinInput.value.replace(/\D/g, '') });
+      const r = await pay(start, token);
+      if (r.status === 'closed') {
+        note.hidden = false;
+        note.textContent = `Order ${start.orderNumber} is saved in My orders. You can pay there when you are ready.`;
+      } else {
+        writeCart([]);
+        location.href = `/account/?paid=${encodeURIComponent(r.orderNumber)}`;
+      }
+    } catch (err) {
+      note.hidden = false;
+      note.textContent = String((err as Error)?.message || err);
+    } finally {
+      render();
+    }
+  });
+
+  Promise.all([loadProducts(liveConfig()), loadPriceList(liveConfig())]).then(([p, l]) => {
+    products = p.products;
+    shop = l.shop;
+    live = Boolean(root.dataset.live) && p.source === 'live' && l.source === 'live';
+    $('[data-sample-note]').hidden = live;
+    render();
+  });
+  window.addEventListener('cart-change', render);
+</script>
