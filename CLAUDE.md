@@ -17,6 +17,7 @@ Overall plan: BoxBook repo `docs/online-business-plan.md`. App + database + shar
 - Payments: `netlify/lib/shop.ts` (`createShop`: payOrder, checkoutCustom, verifyPayment, webhook, paymentLink; HMAC checks; amounts from
   box-core, never from the browser) + thin `netlify/functions/*.mts`; browser side `src/lib/pay.ts` (Razorpay checkout.js). SQL in BoxBook
   `…07_payments.sql` (`web_create_order`, `record_razorpay_payment`, service role only). Setup in README → Online payment.
+- Enquiries: Netlify Forms + `netlify/functions/submission-created.mts` (`netlify/lib/enquiry.ts`) → Supabase `enquiries` → BoxBook Inbox.
 - `src/site.ts`: business details from `PUBLIC_*` env vars, nav. `src/styles/brand.css`: brand colours (override hub token variables only) + site components.
 - Linked deps (`file:`): `../rajesh-hub/packages/{tokens,web-growth}`, `../BoxBook/packages/box-core`. Netlify clones them (`scripts/netlify-build.sh`).
 

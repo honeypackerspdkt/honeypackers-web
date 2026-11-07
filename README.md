@@ -9,7 +9,7 @@ Astro static site on Netlify, started from `rajesh-hub/templates/site`. Prices c
 | `/` | Home: what we make, how ordering works, FAQ (with FAQ structured data) |
 | `/custom-box/` | **Price your box**: size, grade, printing, quantity, pincode → live 3D box, price per box, quantity slabs, BS, weight, delivery, GST, total. Order on WhatsApp or send as enquiry. Inputs are kept in the URL, so a link can be shared. |
 | `/box-strength-calculator/` | Free BS / weight / cut size / deckle calculator (search traffic) |
-| `/contact/` | Enquiry form (Netlify Forms), pre-filled from the price page |
+| `/contact/` | Enquiry form (Netlify Forms), pre-filled from the price page. Each accepted submission is also saved to Supabase `enquiries` by `netlify/functions/submission-created.mts`, so it appears in the BoxBook app's Inbox |
 | `/account/` | **My orders**: buyer signs in with mobile number + SMS code (MSG91, via Supabase), gives name/company/GSTIN/address, sees orders with status and amount due, downloads GST invoices (made in the browser with box-core), orders again. Off until the Supabase variables are set. |
 | `/privacy/` | Privacy policy (**draft, review before going live**) |
 | `/thanks/`, `/404` | |
