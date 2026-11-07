@@ -24,4 +24,5 @@ export const nav = [
   { href: '/box-strength-calculator/', label: 'Strength calculator' },
   { href: '/#range', label: 'Boxes we make' },
   { href: '/contact/', label: 'Contact' },
+  { href: '/account/', label: 'My orders' },
 ];

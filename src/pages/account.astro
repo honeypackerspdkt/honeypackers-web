@@ -1,0 +1,86 @@
+---
+import Base from '../layouts/Base.astro';
+import { GST_STATES } from '@honeypackers/box-core/gst';
+import { site } from '../site';
+const enabled = Boolean(import.meta.env.PUBLIC_SUPABASE_URL && import.meta.env.PUBLIC_SUPABASE_ANON_KEY && import.meta.env.PUBLIC_SHOP_ORG_ID);
+---
+
+<Base title="My orders" description={`Sign in with your mobile number to see your ${site.name} orders, download GST invoices and order again.`}>
+  <section class="section" style="padding-top:32px">
+    <div class="container" style="max-width:820px" data-account data-enabled={enabled ? '1' : ''} data-wa={site.whatsapp} data-name={site.name}>
+      <h1>My orders</h1>
+
+      <div data-view="off" hidden>
+        <p class="card">Online accounts open soon. Until then, <a href="/contact/">send us an enquiry</a>{site.whatsapp && <> or <a href={`https://wa.me/${site.whatsapp}`} data-wa="account">WhatsApp us</a></>} for your order status and invoices.</p>
+      </div>
+
+      <div data-view="loading"><p class="muted">Loading…</p></div>
+
+      <form class="card form-grid" data-view="phone" hidden novalidate>
+        <p class="muted" style="margin:0">Sign in with your mobile number. We'll send a 6-digit code by SMS. No password needed.</p>
+        <label class="field">
+          <span>Mobile number</span>
+          <span style="display:flex;gap:8px">
+            <span class="input" style="width:64px;display:grid;place-items:center;color:var(--ink-soft)">+91</span>
+            <input name="mobile" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" placeholder="98765 43210" required />
+          </span>
+        </label>
+        <p class="notice" data-error hidden></p>
+        <div><button class="btn btn--primary" type="submit">Send code</button></div>
+      </form>
+
+      <form class="card form-grid" data-view="code" hidden novalidate>
+        <p style="margin:0">Enter the code sent to <strong data-mobile></strong>.</p>
+        <label class="field">
+          <span>6-digit code</span>
+          <input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required style="letter-spacing:.3em;max-width:220px" />
+        </label>
+        <p class="notice" data-error hidden></p>
+        <div class="btn-row">
+          <button class="btn btn--primary" type="submit">Sign in</button>
+          <button class="btn btn--ghost" type="button" data-change>Change number</button>
+          <button class="btn btn--ghost" type="button" data-resend>Send again</button>
+        </div>
+      </form>
+
+      <div data-view="account" hidden>
+        <p class="muted" data-who></p>
+        <form class="card form-grid" data-profile hidden novalidate>
+          <h2 style="font-size:1.2rem;margin:0" data-profile-title>Your details</h2>
+          <p class="muted small" style="margin:0">For your quotes and GST invoices. Add your GSTIN to claim input tax credit.</p>
+          <div class="form-grid form-grid--2 stack-sm">
+            <label class="field"><span>Your name</span><input name="name" autocomplete="name" maxlength="80" required /></label>
+            <label class="field"><span>Company <small>(optional)</small></span><input name="company" autocomplete="organization" maxlength="120" /></label>
+          </div>
+          <div class="form-grid form-grid--2 stack-sm">
+            <label class="field"><span>GSTIN <small>(optional)</small></span><input name="gstin" maxlength="15" style="text-transform:uppercase" /></label>
+            <label class="field"><span>State</span>
+              <select name="stateCode">
+                <option value="">Choose…</option>
+                {Object.entries(GST_STATES).map(([code, name]) => <option value={code}>{name}</option>)}
+              </select>
+            </label>
+          </div>
+          <label class="field"><span>Delivery address</span><textarea name="address" maxlength="400" rows="3"></textarea></label>
+          <label class="field"><span>E-mail <small>(optional)</small></span><input name="email" type="email" autocomplete="email" maxlength="120" /></label>
+          <p class="notice" data-error hidden></p>
+          <div class="btn-row"><button class="btn btn--primary" type="submit">Save</button><button class="btn btn--ghost" type="button" data-profile-cancel>Cancel</button></div>
+        </form>
+
+        <div data-orders></div>
+
+        <div class="btn-row" style="margin-top:24px">
+          <a class="btn btn--primary" href="/custom-box/">Price a new box</a>
+          <button class="btn btn--ghost" type="button" data-edit-profile>Your details</button>
+          <button class="btn btn--ghost" type="button" data-signout>Sign out</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { initAccount } from '../scripts/account';
+  const root = document.querySelector<HTMLElement>('[data-account]');
+  if (root) void initAccount(root);
+</script>

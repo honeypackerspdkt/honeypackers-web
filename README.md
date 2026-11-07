@@ -10,6 +10,7 @@ Astro static site on Netlify, started from `rajesh-hub/templates/site`. Prices c
 | `/custom-box/` | **Price your box**: size, grade, printing, quantity, pincode → live 3D box, price per box, quantity slabs, BS, weight, delivery, GST, total. Order on WhatsApp or send as enquiry. Inputs are kept in the URL, so a link can be shared. |
 | `/box-strength-calculator/` | Free BS / weight / cut size / deckle calculator (search traffic) |
 | `/contact/` | Enquiry form (Netlify Forms), pre-filled from the price page |
+| `/account/` | **My orders**: buyer signs in with mobile number + SMS code (MSG91, via Supabase), gives name/company/GSTIN/address, sees orders with status and amount due, downloads GST invoices (made in the browser with box-core), orders again. Off until the Supabase variables are set. |
 | `/privacy/` | Privacy policy (**draft, review before going live**) |
 | `/thanks/`, `/404` | |
 
@@ -30,7 +31,7 @@ git clone https://github.com/yuvarajeshsp-cloud/rajesh-hub ../rajesh-hub
 git clone https://github.com/yuvarajeshsp-cloud/BoxBook ../BoxBook     # box-core lives on BoxBook's branch until merged
 npm install
 npm run dev        # http://localhost:4321
-npm test           # vitest: 3D drawing, price list loading, quote text
+npm test           # vitest: 3D drawing, price list loading, quote text, My orders (rows → orders, totals, invoice)
 npm run check      # astro check (types)
 npm run build
 ```

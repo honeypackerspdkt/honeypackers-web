@@ -16,7 +16,9 @@
     "@honeypackers/box-core": "file:../BoxBook/packages/box-core",
     "@rajesh-hub/tokens": "file:../rajesh-hub/packages/tokens",
     "@rajesh-hub/web-growth": "file:../rajesh-hub/packages/web-growth",
-    "astro": "^7.4.7"
+    "@supabase/supabase-js": "^2.119.0",
+    "astro": "^7.4.7",
+    "jspdf": "^4.2.1"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
