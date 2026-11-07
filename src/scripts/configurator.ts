@@ -18,6 +18,8 @@ export async function initConfigurator(root: HTMLElement) {
   const business = root.dataset.name || '';
   let shop: WebShop = samplePriceList().shop;
   let view: View = { ...defaultView };
+  let canBuy = false;
+  let liveLoaded = false;
 
   // Restore a shared link (?l=…&w=…&h=…&g=…&c=…&q=…&pin=…)
   const qs = new URLSearchParams(location.search);
@@ -117,6 +119,8 @@ export async function initConfigurator(root: HTMLElement) {
         }
       }
       const t = checkoutTotals(p.amount, delivery, TAX_PCT);
+      const zoneOk = /^\d{6}$/.test(s.pincode) && deliveryText !== 'Ask us' && deliveryText !== 'At checkout';
+      canBuy = zoneOk && !(shop.minOrderValue > 0 && p.amount < shop.minOrderValue);
       $('[data-delivery]').textContent = deliveryText;
       $('[data-gst-label]').textContent = `GST ${TAX_PCT}%`;
       $('[data-gst]').textContent = rs(t.tax);
@@ -133,10 +137,13 @@ export async function initConfigurator(root: HTMLElement) {
         .join('');
       text = quoteText({ business, size: s, grade: grade ? grade.label || gradeLabel(grade) : '', colours: s.colours, qty: p.qty, unitPrice: shop.showPrices ? p.unitPrice : undefined, bs: p.box.bs, pincode: s.pincode, url: location.href });
     } else {
+      canBuy = false;
       $('[data-bad-msg]').textContent = p.message;
       text = quoteText({ business, size: s, grade: grade ? grade.label || gradeLabel(grade) : '', colours: s.colours, qty: s.qty, pincode: s.pincode, url: location.href });
     }
 
+    const buy = root.querySelector<HTMLButtonElement>('[data-buy]');
+    if (buy) buy.hidden = !(canBuy && shop.showPrices && liveLoaded);
     const wa = root.querySelector<HTMLAnchorElement>('[data-wa-order]');
     if (wa && whatsapp) wa.href = `https://wa.me/${whatsapp}?text=${encodeURIComponent(text)}`;
     $<HTMLAnchorElement>('[data-enquiry-link]').href = `/contact/?details=${encodeURIComponent(text)}`;
@@ -166,6 +173,32 @@ export async function initConfigurator(root: HTMLElement) {
     drawBox();
   });
 
+  // Order & pay online: the server prices the box again, creates the order and opens Razorpay.
+  root.querySelector<HTMLButtonElement>('[data-buy]')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget as HTMLButtonElement;
+    const note = $('[data-buy-msg]');
+    const say = (t: string) => ((note.textContent = t), (note.hidden = !t));
+    say('');
+    btn.disabled = true;
+    try {
+      const [{ accessToken }, { callFn, pay }] = await Promise.all([import('../lib/account-api'), import('../lib/pay')]);
+      const token = await accessToken();
+      if (!token) {
+        location.href = `/account/?return=${encodeURIComponent(location.pathname + location.search)}`;
+        return;
+      }
+      const s = read();
+      const start = await callFn<import('../lib/pay').CheckoutStart>('checkout-custom', token, s);
+      const r = await pay(start, token);
+      if (r.status === 'closed') say(`Order ${start.orderNumber} is saved in My orders. You can pay there when you are ready.`);
+      else location.href = `/account/?paid=${encodeURIComponent(r.orderNumber)}`;
+    } catch (err) {
+      say(String((err as Error)?.message || err));
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
   form.addEventListener('input', update);
   form.addEventListener('change', update);
   fillGrades();
@@ -174,6 +207,7 @@ export async function initConfigurator(root: HTMLElement) {
   if (root.dataset.live) {
     const list = await loadPriceList(liveConfig());
     shop = list.shop;
+    liveLoaded = list.source === 'live';
     document.querySelectorAll<HTMLElement>('[data-sample-note]').forEach((n) => (n.hidden = list.source === 'live'));
     fillGrades();
     update();

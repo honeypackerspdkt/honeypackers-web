@@ -14,6 +14,9 @@ Overall plan: BoxBook repo `docs/online-business-plan.md`. App + database + shar
 - My orders (`/account/`): `src/lib/account.ts` (pure: rows → orders, totals, re-order, invoice company from `public_business`),
   `src/lib/account-api.ts` (lazy supabase-js: SMS sign-in `+91…`, `buyer_link` RPC, own orders via RLS), `src/scripts/account.ts` (UI).
   The SMS goes through BoxBook's `send-sms-msg91` hook. jsPDF is a site dependency (deduped in astro.config) for the invoice PDF.
+- Payments: `netlify/lib/shop.ts` (`createShop`: payOrder, checkoutCustom, verifyPayment, webhook, paymentLink; HMAC checks; amounts from
+  box-core, never from the browser) + thin `netlify/functions/*.mts`; browser side `src/lib/pay.ts` (Razorpay checkout.js). SQL in BoxBook
+  `…07_payments.sql` (`web_create_order`, `record_razorpay_payment`, service role only). Setup in README → Online payment.
 - `src/site.ts`: business details from `PUBLIC_*` env vars, nav. `src/styles/brand.css`: brand colours (override hub token variables only) + site components.
 - Linked deps (`file:`): `../rajesh-hub/packages/{tokens,web-growth}`, `../BoxBook/packages/box-core`. Netlify clones them (`scripts/netlify-build.sh`).
 

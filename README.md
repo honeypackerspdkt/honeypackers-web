@@ -44,6 +44,25 @@ npm run build
 3. Forms → enable form detection; add an e-mail notification for the `enquiry` form.
 4. Domain: add `honeypackers.in` and `www.honeypackers.in`, then HTTPS.
 
+## Online payment (Razorpay)
+Server functions in `netlify/functions` (logic in `netlify/lib/shop.ts`, tested in `tests/shop.test.ts` with fake Supabase and Razorpay):
+| Function | Called by | Does |
+|---|---|---|
+| `pay-order` | My orders → "Pay ₹… now" | amount due on the buyer's own order (box-core totals) → Razorpay order |
+| `checkout-custom` | price page → "Order & pay online" | prices the box again on the server, creates the website order (`web_create_order`), Razorpay order for the advance % (100% by default) |
+| `verify-payment` | browser after paying | checks Razorpay's signature (key secret, `order_id|payment_id`) and records the payment if captured |
+| `razorpay-webhook` | Razorpay | checks `X-Razorpay-Signature` (webhook secret) and records `order.paid` / `payment_link.paid` once (`record_razorpay_payment`) |
+| `payment-link` | BoxBook app → "Send payment link" | office staff only; Razorpay payment link for the amount due |
+
+Setup:
+1. Razorpay dashboard: get the **Key ID** and **Key Secret** (test mode first).
+2. Webhooks → add `https://honeypackers.in/.netlify/functions/razorpay-webhook`, events **order.paid** and **payment_link.paid**, set a webhook secret.
+3. Netlify environment variables: `SUPABASE_SERVICE_ROLE_KEY`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`
+   (plus the `PUBLIC_SUPABASE_*` and `PUBLIC_SHOP_ORG_ID` already used by the site). Never give these a `PUBLIC_` prefix.
+4. BoxBook app: `VITE_SHOP_URL=https://honeypackers.in` in its `.env.local`, so "Send payment link" can reach the server.
+5. Test with Razorpay test cards / UPI in test mode, check the payment appears in BoxBook, then switch to live keys.
+Courier pincodes are not sold online yet (they go to enquiry) until courier rates are added.
+
 ## Next
 - Online payment (Razorpay) and buyer accounts once Supabase is set up (plan: BoxBook `docs/online-business-plan.md`).
 - Standard boxes in packs (products), Tamil pages, guides per industry, Google Business Profile.

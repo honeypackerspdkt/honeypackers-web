@@ -86,6 +86,7 @@ const live = Boolean(import.meta.env.PUBLIC_SUPABASE_URL && import.meta.env.PUBL
                 <dt class="total">Total</dt><dd class="total" data-total>—</dd>
               </dl>
               <p class="small muted" data-delivery-note style="margin:10px 0 0"></p>
+              <p class="notice" data-buy-msg hidden style="margin:12px 0 0"></p>
             </div>
             <div data-bad hidden>
               <p class="notice" data-bad-msg style="margin:0 0 12px"></p>
@@ -95,6 +96,7 @@ const live = Boolean(import.meta.env.PUBLIC_SUPABASE_URL && import.meta.env.PUBL
               <p style="margin:0">Send us your size and quantity and we'll reply with a quote.</p>
             </div>
             <div class="btn-row" style="margin-top:18px">
+              {live && <button class="btn btn--primary" type="button" data-buy hidden>Order &amp; pay online</button>}
               {site.whatsapp && <a class="btn btn--whatsapp" href="#" data-wa-order data-wa="configurator" rel="noopener">Order on WhatsApp</a>}
               <a class="btn btn--ghost" href="/contact/" data-enquiry-link>Send as enquiry</a>
             </div>

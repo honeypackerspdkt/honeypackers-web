@@ -1,6 +1,7 @@
 import type { Customer, Order } from '@honeypackers/box-core/types';
 import { invoiceCompany, mobile10, orderView, reorderLink, reorderText } from '../lib/account';
 import * as api from '../lib/account-api';
+import { callFn, pay, type CheckoutStart } from '../lib/pay';
 
 const inr = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const rs = (n: number) => `₹${inr.format(n)}`;
@@ -113,6 +114,8 @@ export async function initAccount(root: HTMLElement) {
       me = await api.link({ name: v('name'), company: v('company'), gstin, stateCode: v('stateCode') || (gstin ? gstin.slice(0, 2) : ''), address: v('address'), email: v('email') });
       profileForm.hidden = true;
       renderWho();
+      const back = new URLSearchParams(location.search).get('return');
+      if (back && back.startsWith('/') && !back.startsWith('//')) location.href = back;
     } catch (err) {
       setError(profileForm, message(err));
     } finally {
@@ -157,12 +160,50 @@ export async function initAccount(root: HTMLElement) {
           <ul style="margin:0 0 12px;padding-left:1.1em">${lines}</ul>
           <dl class="kv"><dt>Total (incl. GST)</dt><dd>${rs(v.total)}</dd>${v.paid ? `<dt>Paid</dt><dd>${rs(v.paid)}</dd>` : ''}${o.status !== 'quote' && o.status !== 'cancelled' && v.due > 0.5 ? `<dt>Amount due</dt><dd>${rs(v.due)}</dd>` : ''}</dl>
           <div class="btn-row" style="margin-top:14px">
-            ${v.canInvoice ? `<button class="btn btn--primary" type="button" data-invoice="${idx}">Download invoice (PDF)</button>` : ''}
+            ${v.due > 0.5 && o.status !== 'cancelled' ? `<button class="btn btn--primary" type="button" data-pay="${idx}">Pay ${rs(v.due)} now</button>` : ''}
+            ${v.canInvoice ? `<button class="btn btn--ghost" type="button" data-invoice="${idx}">Download invoice (PDF)</button>` : ''}
             ${wa ? `<a class="btn btn--whatsapp" href="https://wa.me/${wa}?text=${waText}" data-wa="reorder" rel="noopener">Order again</a>` : ''}
           </div>
         </article>`;
       })
       .join('');
+  };
+
+  // Pay the amount due (Razorpay); the server works out the amount.
+  $('[data-orders]').addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-pay]');
+    if (!btn) return;
+    const o = orders[Number(btn.dataset.pay)];
+    const label = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Opening payment…';
+    try {
+      const token = await api.accessToken();
+      if (!token) throw new Error('Your sign-in has expired. Please sign in again.');
+      const start = await callFn<CheckoutStart>('pay-order', token, { orderId: o.id });
+      const r = await pay(start, token);
+      if (r.status !== 'closed') {
+        flash(r.status === 'paid' ? `Thank you! Payment received for ${r.orderNumber}.` : `Thank you! Your payment for ${r.orderNumber} is being confirmed.`);
+        await refreshOrders();
+      }
+    } catch (err) {
+      alert(message(err));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = label;
+    }
+  });
+
+  const flash = (text: string) => {
+    const box = $('[data-flash]');
+    box.textContent = text;
+    box.hidden = !text;
+  };
+  const refreshOrders = async () => {
+    const r = await api.myOrders();
+    orders = r.orders;
+    business = r.business;
+    renderOrders();
   };
 
   // Invoice PDF made in the browser with the same code as the app (jsPDF loads only when asked).
@@ -201,6 +242,11 @@ export async function initAccount(root: HTMLElement) {
       renderOrders();
       show('account');
       if (!me.name) openProfile(true);
+      // Came here to sign in from the price page: go back there.
+      const back = new URLSearchParams(location.search).get('return');
+      if (back && back.startsWith('/') && !back.startsWith('//') && me.name) location.href = back;
+      const done = new URLSearchParams(location.search).get('paid');
+      if (done) flash(`Thank you! Order ${done} is placed. We'll confirm the delivery date.`);
     } catch (err) {
       show('phone');
       setError(phoneForm, message(err));

@@ -37,6 +37,12 @@ export async function signedInPhone(): Promise<string | null> {
   return data.session?.user?.phone ? `+${data.session.user.phone.replace(/^\+/, '')}` : null;
 }
 
+/** Access token for our server functions (payments). */
+export async function accessToken(): Promise<string | null> {
+  const { data } = await (await sb()).auth.getSession();
+  return data.session?.access_token ?? null;
+}
+
 export async function signOut() {
   await (await sb()).auth.signOut();
 }
