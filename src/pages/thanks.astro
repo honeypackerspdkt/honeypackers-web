@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import { site, waHref } from '../site';
+---
+
+<Base title="Thank you" description="Your enquiry has been sent.">
+  <section class="section">
+    <div class="container prose">
+      <h1>Thank you, we've got your enquiry</h1>
+      <p>We'll call or WhatsApp you soon with a quote.</p>
+      <div class="btn-row">
+        <a class="btn btn--primary" href="/custom-box/">Price another box</a>
+        {site.whatsapp && <a class="btn btn--whatsapp" href={waHref(site.whatsapp)} data-wa="thanks">WhatsApp us</a>}
+      </div>
+    </div>
+  </section>
+</Base>

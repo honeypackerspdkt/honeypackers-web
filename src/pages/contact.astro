@@ -1,0 +1,25 @@
+---
+import Base from '../layouts/Base.astro';
+import EnquiryForm from '../components/EnquiryForm.astro';
+import { site, telHref, waHref } from '../site';
+---
+
+<Base title="Contact us" description={`Send ${site.name} an enquiry for corrugated boxes: size, ply, quantity and printing. We reply by phone or WhatsApp.`}>
+  <section class="section" style="padding-top:32px">
+    <div class="container" style="display:grid;gap:28px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start">
+      <div>
+        <h1>Contact us</h1>
+        <p class="section__intro">Tell us what you need and we'll reply with a quote. For a price straight away, use the <a href="/custom-box/">box price calculator</a>.</p>
+        <ul class="card" style="list-style:none;margin:0;display:grid;gap:10px">
+          {site.phone && <li><strong>Phone:</strong> <a href={telHref(site.phone)}>{site.phone}</a></li>}
+          {site.whatsapp && <li><strong>WhatsApp:</strong> <a href={waHref(site.whatsapp, `Hi ${site.name}, I need corrugated boxes.`)} data-wa="contact">Chat with us</a></li>}
+          {site.email && <li><strong>E-mail:</strong> <a href={`mailto:${site.email}`}>{site.email}</a></li>}
+          {site.address && <li><strong>Factory:</strong> {site.address}{site.city && `, ${site.city}`}</li>}
+          {site.gstin && <li><strong>GSTIN:</strong> {site.gstin}</li>}
+          <li class="muted small">We usually reply the same working day.</li>
+        </ul>
+      </div>
+      <EnquiryForm />
+    </div>
+  </section>
+</Base>

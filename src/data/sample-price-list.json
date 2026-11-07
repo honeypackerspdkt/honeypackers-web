@@ -1,0 +1,41 @@
+{
+  "_note": "SAMPLE VALUES ONLY, not Honey Packers' real prices. Used until the BoxBook web price list is live in Supabase.",
+  "rules": {
+    "paper": [
+      { "gsm": 120, "bf": 18, "pricePerKg": 42 },
+      { "gsm": 150, "bf": 20, "pricePerKg": 46 },
+      { "gsm": 180, "bf": 22, "pricePerKg": 50 }
+    ],
+    "conversionPerKg": { "3": 12, "5": 14, "7": 16 },
+    "printing": { "perColourPerBox": 0.6, "plateCharge": 1500, "maxColours": 4 },
+    "slabs": [
+      { "minQty": 100, "marginPct": 30 },
+      { "minQty": 500, "marginPct": 22 },
+      { "minQty": 2000, "marginPct": 15 }
+    ],
+    "limits": { "minQty": 100, "maxQty": 50000, "maxDeckle": 1800, "maxCut": 1600, "minSide": 50 },
+    "grades": [
+      { "id": "3-120-18", "label": "3 ply · light (120 GSM · 18 BF)", "ply": 3, "layers": [{ "gsm": 120, "bf": 18 }] },
+      { "id": "3-150-20", "label": "3 ply · strong (150 GSM · 20 BF)", "ply": 3, "layers": [{ "gsm": 150, "bf": 20 }] },
+      {
+        "id": "5-150-120",
+        "label": "5 ply · heavy (150 / 120 GSM)",
+        "ply": 5,
+        "layers": [
+          { "gsm": 150, "bf": 20 },
+          { "gsm": 120, "bf": 18 },
+          { "gsm": 120, "bf": 18 },
+          { "gsm": 120, "bf": 18 },
+          { "gsm": 150, "bf": 20 }
+        ]
+      },
+      { "id": "7-180-22", "label": "7 ply · export (180 GSM · 22 BF)", "ply": 7, "layers": [{ "gsm": 180, "bf": 22 }] }
+    ]
+  },
+  "zones": [
+    { "id": "tn", "name": "Tamil Nadu", "pincodeFrom": 600000, "pincodeTo": 643999, "mode": "courier", "ratePerKg": 0, "minCharge": 0, "freeAbove": null, "days": 4 }
+  ],
+  "advancePct": 100,
+  "minOrderValue": 0,
+  "showPrices": true
+}

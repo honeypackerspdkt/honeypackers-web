@@ -1,0 +1,32 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../site';
+const contact = [site.email, site.phone].filter(Boolean).join(' / ');
+---
+
+<Base title="Privacy policy" description={`How ${site.name} uses the details you share on this website.`}>
+  <section class="section" style="padding-top:32px">
+    <div class="container prose">
+      <h1>Privacy policy</h1>
+      <p class="notice">Draft: to be reviewed before the website goes live.</p>
+      <p>This policy explains what {site.name} ("we") collects on honeypackers.in and why, as required by India's Digital Personal Data Protection Act, 2023 and its Rules.</p>
+      <h2>What we collect</h2>
+      <ul>
+        <li><strong>Enquiries:</strong> your name, mobile number, company, pincode and the box details you send, so we can quote and deliver.</li>
+        <li><strong>Price calculator:</strong> the sizes you enter stay in your browser. They are only sent to us if you send them as an enquiry or WhatsApp message.</li>
+        <li><strong>Cookies for ads:</strong> only if you click "Accept", we use the Meta (Facebook / Instagram) Pixel to see which ads bring visitors. Choose "No thanks" and it is not loaded.</li>
+      </ul>
+      <h2>How we use it</h2>
+      <p>Only to answer your enquiry, prepare quotes, invoices and deliveries, and keep the business records the law requires (for example GST records). We do not sell your details.</p>
+      <h2>Who else sees it</h2>
+      <p>Our website host (Netlify) stores enquiry forms; WhatsApp carries the messages you send us; Meta receives ad measurement data only with your consent.</p>
+      <h2>How long we keep it</h2>
+      <p>Enquiries that do not become orders are deleted within 12 months. Order and invoice records are kept as long as tax law requires.</p>
+      <h2>Your rights</h2>
+      <p>You can ask to see, correct or delete your details, or withdraw consent, at any time{contact && <> by contacting us at {contact}</>}. We reply within 30 days.</p>
+      <h2>Grievance officer</h2>
+      <p>{site.grievanceOfficer ? site.grievanceOfficer : 'Name and contact to be added.'}{contact && <>, {contact}</>}</p>
+      <p class="muted small">Last updated: November 2026.</p>
+    </div>
+  </section>
+</Base>

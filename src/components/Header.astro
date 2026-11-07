@@ -1,0 +1,26 @@
+---
+import { nav, site } from '../site';
+const path = Astro.url.pathname;
+const current = (href: string) => (href !== '/' && !href.includes('#') && path.startsWith(href) ? 'page' : undefined);
+---
+
+<header class="site-header">
+  <div class="container site-header__bar">
+    <a class="brand" href="/">
+      <img src="/favicon.svg" alt="" width="34" height="34" />
+      <span>{site.name}</span>
+    </a>
+    <nav class="site-nav" aria-label="Main">
+      {nav.slice(1).map((l) => <a href={l.href} aria-current={current(l.href)}>{l.label}</a>)}
+      <a class="btn btn--primary" href={nav[0].href} aria-current={current(nav[0].href)}>{nav[0].label}</a>
+    </nav>
+    <details class="menu">
+      <summary aria-label="Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+      </summary>
+      <div class="menu__panel">
+        {nav.map((l) => <a href={l.href} aria-current={current(l.href)}>{l.label}</a>)}
+      </div>
+    </details>
+  </div>
+</header>

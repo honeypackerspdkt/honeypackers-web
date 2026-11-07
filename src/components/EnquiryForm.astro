@@ -1,0 +1,35 @@
+---
+// Saved by Netlify Forms (form name "enquiry"); shows up in the Netlify dashboard and can e-mail the owner.
+// The configurator fills the "details" field with the box spec and price when it links here.
+interface Props {
+  subject?: string;
+}
+const { subject = 'Website enquiry' } = Astro.props;
+---
+
+<form class="card form-grid" name="enquiry" method="POST" action="/thanks/" data-netlify="true" netlify-honeypot="company_website" data-enquiry>
+  <input type="hidden" name="form-name" value="enquiry" />
+  <input type="hidden" name="subject" value={subject} />
+  <p class="hp"><label>Leave this empty <input name="company_website" tabindex="-1" autocomplete="off" /></label></p>
+  <div class="form-grid form-grid--2 stack-sm">
+    <label class="field"><span>Your name</span><input name="name" required autocomplete="name" maxlength="80" /></label>
+    <label class="field"><span>Mobile number</span><input name="phone" type="tel" required autocomplete="tel" inputmode="tel" pattern="[0-9+ ]{10,15}" maxlength="15" /></label>
+  </div>
+  <div class="form-grid form-grid--2 stack-sm">
+    <label class="field"><span>Company <small>(optional)</small></span><input name="company" autocomplete="organization" maxlength="120" /></label>
+    <label class="field"><span>Pincode <small>(for delivery)</small></span><input name="pincode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" /></label>
+  </div>
+  <label class="field"><span>What do you need?</span><textarea name="details" required maxlength="2000" placeholder="Box size (L × W × H in mm), ply, quantity, printing…" data-enquiry-details></textarea></label>
+  <label class="small" style="display:flex;gap:10px;align-items:flex-start">
+    <input type="checkbox" name="consent" value="yes" required style="margin-top:6px" />
+    <span>You may contact me about this enquiry by phone or WhatsApp. See the <a href="/privacy/">privacy policy</a>.</span>
+  </label>
+  <div><button class="btn btn--primary" type="submit">Send enquiry</button></div>
+</form>
+
+<script>
+  // Pre-fill from ?details=… (the configurator's "Send as enquiry" link).
+  const details = new URLSearchParams(location.search).get('details');
+  const box = document.querySelector<HTMLTextAreaElement>('[data-enquiry-details]');
+  if (details && box && !box.value) box.value = details.slice(0, 2000);
+</script>
