@@ -1,0 +1,5 @@
+# Old addresses → new shop pages
+/cart        /checkout/  301
+/cart/       /checkout/  301
+/products    /shop/      301
+/products/   /shop/      301

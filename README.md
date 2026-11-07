@@ -3,18 +3,22 @@
 Website and (later) online shop for **Honey Packers**, corrugated box manufacturer.
 Astro static site on Netlify, started from `rajesh-hub/templates/site`. Prices come from the **BoxBook** app's web price list.
 
-## Pages
+## Pages (storefront)
 | Page | What |
 |---|---|
-| `/` | Home: what we make, how ordering works, FAQ (with FAQ structured data) |
-| `/custom-box/` | **Price your box**: size, grade, printing, quantity, pincode → live 3D box, price per box, quantity slabs, BS, weight, delivery, GST, total. Order on WhatsApp or send as enquiry. Inputs are kept in the URL, so a link can be shared. |
-| `/products/` | **Boxes in packs**: standard sizes from BoxBook (More → Products), 3D box, BS, weight, pack prices; add to cart. Built with the products at build time, refreshed live in the browser. |
-| `/cart/` | Cart (this browser): packs, delivery by pincode, GST, total; pay online through `checkout-cart` (server prices it again with box-core `priceCart`). |
-| `/box-strength-calculator/` | Free BS / weight / cut size / deckle calculator (search traffic) |
-| `/contact/` | Enquiry form (Netlify Forms), pre-filled from the price page. Each accepted submission is also saved to Supabase `enquiries` by `netlify/functions/submission-created.mts`, so it appears in the BoxBook app's Inbox |
-| `/account/` | **My orders**: buyer signs in with mobile number + SMS code (MSG91, via Supabase), gives name/company/GSTIN/address, sees orders with status and amount due, downloads GST invoices (made in the browser with box-core), orders again. Off until the Supabase variables are set. |
-| `/privacy/` | Privacy policy (**draft, review before going live**) |
-| `/thanks/`, `/404` | |
+| `/` | Shop home: hero (Shop boxes / Get a custom size), categories (3/5/7 ply, custom & print), ready-to-order packs, custom-size band, FAQ |
+| `/shop/` | All standard boxes: filter by ply, sort (price, size), search (also from the header search box: `/shop/?q=…`) |
+| `/products/<slug>/` | Product page (one per product at build time, with Google product data): 3D box, pack picker, quantity, Add to cart / Buy now, delivery check by pincode, specifications |
+| `/product/?p=<slug>` | Same page for products added after the last build |
+| `/checkout/` | One-page checkout: boxes → delivery → sign in by SMS code + details (GSTIN, address) → Pay securely. Before payments are live it offers WhatsApp / enquiry instead |
+| `/custom-box/` | Any size: live price, 3D box, slabs, order & pay |
+| `/account/` | My orders: SMS sign-in, orders, invoices, pay what's due, order again |
+| `/box-strength-calculator/`, `/contact/`, `/privacy/`, `/thanks/`, `/404` | |
+Every page: promo strip, header (search, menu, account, cart with count), slide-in mini cart, trust strip, footer.
+Old addresses `/cart/` and `/products/` redirect (`public/_redirects`).
+
+**Colour:** set `PUBLIC_BRAND_COLOR` in Netlify (preset `kraft`, `forest`, `ocean`, `charcoal`, `maroon`, `teal`, or a hex colour) and redeploy.
+Everything (buttons, tints, borders, the 3D box) is mixed from that one colour; colours too light for white text are darkened automatically.
 
 ## Where things come from
 - **Box maths and pricing:** `@honeypackers/box-core` from the BoxBook repo (`packages/box-core`): `calcBox`, `priceCustomBox`,

@@ -1,0 +1,97 @@
+---
+import Base from '../layouts/Base.astro';
+import { loadProducts } from '../lib/products';
+import { liveConfig } from '../lib/price-list';
+import { productTile } from '../lib/product-card';
+import { productHref } from '../lib/catalog';
+import { icon } from '../lib/icons';
+
+const { products, source } = await loadProducts(liveConfig());
+const built = new Set(products.map((p) => p.slug));
+const plies = [...new Set(products.map((p) => p.ply))].sort();
+---
+
+<Base title="Shop corrugated boxes" description="Buy 3, 5 and 7 ply corrugated boxes in packs online. See price per box, strength (BS) and weight; GST invoice with every order.">
+  <section class="container" style="padding-top:24px" data-shop data-built={JSON.stringify([...built])}>
+    <div class="shop-head">
+      <div>
+        <h1>Shop boxes</h1>
+        <p class="muted" style="margin:4px 0 0" data-count>{products.length} ready sizes · need another size? <a href="/custom-box/">Custom size</a></p>
+      </div>
+    </div>
+    {source === 'sample' && <p class="notice" data-sample-note>These are <strong>sample products and prices</strong> while our shop is being set up.</p>}
+    <div class="toolbar">
+      <div class="chips" role="radiogroup" aria-label="Filter by ply" data-ply>
+        <label><input type="radio" name="ply" value="" checked /><span>All</span></label>
+        {[3, 5, 7].map((p) => <label><input type="radio" name="ply" value={p} /><span>{p} ply</span></label>)}
+      </div>
+      <select data-sort aria-label="Sort">
+        <option value="">Recommended</option>
+        <option value="price-asc">Price per box: low to high</option>
+        <option value="price-desc">Price per box: high to low</option>
+        <option value="size-asc">Size: small to large</option>
+        <option value="size-desc">Size: large to small</option>
+      </select>
+      <label class="search"><Fragment set:html={icon.search(18)} /><input type="search" data-q placeholder="Search size or name" aria-label="Search boxes" /></label>
+    </div>
+    <div class="tiles" data-tiles set:html={products.map((p) => productTile(p, productHref(p, built))).join('')} />
+    <p class="card" data-none hidden>No boxes match. <a href="/custom-box/">Price any size</a> instead.</p>
+    {plies.length === 0 && <p class="card">No ready sizes online right now. <a href="/custom-box/">Price your box</a> or <a href="/contact/">send an enquiry</a>.</p>}
+  </section>
+</Base>
+
+<script>
+  import type { Product } from '@honeypackers/box-core/types';
+  import { catalog, fromPrice, productHref } from '../lib/catalog';
+  import { productTile } from '../lib/product-card';
+  import { wireTiles } from '../lib/add-to-cart';
+
+  const root = document.querySelector<HTMLElement>('[data-shop]')!;
+  const tiles = root.querySelector<HTMLElement>('[data-tiles]')!;
+  const built = new Set<string>(JSON.parse(root.dataset.built || '[]'));
+  const sortSel = root.querySelector<HTMLSelectElement>('[data-sort]')!;
+  const qInput = root.querySelector<HTMLInputElement>('[data-q]')!;
+  let products: Product[] = [];
+
+  const params = new URLSearchParams(location.search);
+  qInput.value = params.get('q') || '';
+  sortSel.value = params.get('sort') || '';
+  const ply = params.get('ply') || '';
+  const plyInput = root.querySelector<HTMLInputElement>(`[data-ply] input[value="${CSS.escape(ply)}"]`);
+  if (plyInput) plyInput.checked = true;
+
+  const volume = (p: Product) => p.spec.length * p.spec.width * p.spec.height;
+  const matches = (p: Product, q: string) => {
+    if (!q) return true;
+    const hay = `${p.name} ${p.description} ${p.ply} ply ${p.spec.length}x${p.spec.width}x${p.spec.height} ${p.spec.length}×${p.spec.width}×${p.spec.height}`.toLowerCase();
+    return q.toLowerCase().replace(/×/g, 'x').split(/\s+/).every((w) => hay.replace(/×/g, 'x').includes(w));
+  };
+
+  function render() {
+    const q = qInput.value.trim();
+    const plyV = root.querySelector<HTMLInputElement>('[data-ply] input:checked')?.value || '';
+    const sort = sortSel.value;
+    let list = products.filter((p) => (!plyV || String(p.ply) === plyV) && matches(p, q));
+    if (sort === 'price-asc') list = [...list].sort((a, b) => fromPrice(a) - fromPrice(b));
+    if (sort === 'price-desc') list = [...list].sort((a, b) => fromPrice(b) - fromPrice(a));
+    if (sort === 'size-asc') list = [...list].sort((a, b) => volume(a) - volume(b));
+    if (sort === 'size-desc') list = [...list].sort((a, b) => volume(b) - volume(a));
+    tiles.innerHTML = list.map((p) => productTile(p, productHref(p, built))).join('');
+    root.querySelector<HTMLElement>('[data-none]')!.hidden = list.length > 0 || products.length === 0;
+    const u = new URLSearchParams();
+    if (q) u.set('q', q);
+    if (plyV) u.set('ply', plyV);
+    if (sort) u.set('sort', sort);
+    history.replaceState(null, '', `${location.pathname}${u.size ? `?${u}` : ''}`);
+  }
+
+  root.querySelector('[data-ply]')!.addEventListener('change', render);
+  sortSel.addEventListener('change', render);
+  qInput.addEventListener('input', render);
+  wireTiles(tiles);
+  void catalog().then((r) => {
+    products = r.products;
+    if (r.source === 'live') root.querySelector('[data-sample-note]')?.remove();
+    render();
+  });
+</script>

@@ -2,32 +2,38 @@ import { calcBox } from '@honeypackers/box-core/calc';
 import { defaultView } from '@honeypackers/box-core/box3d';
 import type { Product } from '@honeypackers/box-core/types';
 import { BOX_H, BOX_W, boxSvgInner } from './box-svg';
+import { fromPrice } from './catalog';
 
-/** HTML for one product card (used at build time and again in the browser with live prices). */
+/** Shop tile for a product (built at build time and again in the browser with live data). */
 const inr = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const rs = (n: number) => `₹${inr.format(n)}`;
-const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+export const rs = (n: number) => `₹${inr.format(n)}`;
+export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
-export function productCard(p: Product): string {
+export function stockText(p: Product): { text: string; cls: string; out: boolean } {
+  if (p.stockQty == null) return { text: 'Made to order', cls: 'muted', out: false };
+  if (p.stockQty <= 0) return { text: 'Out of stock', cls: 'stock-low', out: true };
+  if (p.stockQty < (p.packs[0]?.qty || 0) * 3) return { text: `Only ${p.stockQty.toLocaleString('en-IN')} left`, cls: 'stock-low', out: false };
+  return { text: `${p.stockQty.toLocaleString('en-IN')} in stock`, cls: 'stock-ok', out: false };
+}
+
+export function productTile(p: Product, href: string): string {
   const r = calcBox(p.spec);
-  const packs = p.packs
-    .map(
-      (k, i) => `<label><input type="radio" name="pack-${esc(p.id)}" value="${k.qty}" ${i === 0 ? 'checked' : ''} />
-        <span><b>${k.qty.toLocaleString('en-IN')} boxes</b>&nbsp;· ${rs(k.price)} <small>(${rs(k.price / k.qty)} each)</small></span></label>`,
-    )
-    .join('');
-  const stock = p.stockQty == null ? 'Made to order' : p.stockQty > 0 ? `${p.stockQty.toLocaleString('en-IN')} in stock` : 'Out of stock';
-  const out = p.stockQty != null && p.stockQty <= 0;
-  return `<article class="card product" data-product="${esc(p.id)}" id="${esc(p.slug || p.id)}">
-    <div class="box3d product__box"><svg viewBox="0 0 ${BOX_W} ${BOX_H}" aria-hidden="true">${boxSvgInner({ length: p.spec.length, width: p.spec.width, height: p.spec.height }, defaultView)}</svg></div>
-    <h2 class="product__name">${esc(p.name)}</h2>
-    <p class="spec-line">${p.spec.length}×${p.spec.width}×${p.spec.height} mm inside · ${p.ply} ply · BS ${r.bs} kg/cm² · ${Math.round(r.weight)} g · <span class="${out ? '' : 'muted'}">${stock}</span></p>
-    ${p.description ? `<p class="muted small">${esc(p.description)}</p>` : ''}
-    <div class="chips chips--stack" role="radiogroup" aria-label="Pack size">${packs}</div>
-    <div class="product__buy">
-      <label class="field product__count"><span class="visually-hidden">Number of packs</span><span class="input-unit"><input type="number" inputmode="numeric" min="1" max="1000" value="1" data-count /><em>packs</em></span></label>
-      <button class="btn btn--primary" type="button" data-add ${out ? 'disabled' : ''}>Add to cart</button>
+  const st = stockText(p);
+  const opts = p.packs.map((k) => `<option value="${k.qty}">${k.qty.toLocaleString('en-IN')} boxes · ${rs(k.price)}</option>`).join('');
+  return `<article class="tile" data-product="${esc(p.id)}">
+    <a class="tile__media" href="${href}" aria-label="${esc(p.name)}">
+      <svg viewBox="0 0 ${BOX_W} ${BOX_H}" aria-hidden="true" class="box3d">${boxSvgInner({ length: p.spec.length, width: p.spec.width, height: p.spec.height }, defaultView, false)}</svg>
+      <span class="tile__tag">${p.ply} ply</span>
+      ${st.cls === 'stock-low' ? `<span class="tile__tag tile__tag--stock">${esc(st.text)}</span>` : ''}
+    </a>
+    <div class="tile__body">
+      <a class="tile__name" href="${href}">${esc(p.name)}</a>
+      <span class="tile__spec">${p.spec.length}×${p.spec.width}×${p.spec.height} mm · BS ${r.bs}</span>
+      <span class="tile__price">from ${rs(fromPrice(p))} <small>/ box</small></span>
+      <div class="tile__buy">
+        <select data-pack aria-label="Pack size">${opts}</select>
+        <button class="btn btn--primary btn--sm" type="button" data-add ${st.out ? 'disabled' : ''}>${st.out ? 'Sold out' : 'Add'}</button>
+      </div>
     </div>
-    <p class="small muted" style="margin:6px 0 0">Prices before GST (5%). Delivery worked out in the cart.</p>
   </article>`;
 }

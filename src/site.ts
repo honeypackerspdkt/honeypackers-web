@@ -19,10 +19,13 @@ export const site = {
 export const telHref = (p: string) => `tel:${p.replace(/[^\d+]/g, '')}`;
 export const waHref = (number: string, text?: string) => `https://wa.me/${number}${text ? `?text=${encodeURIComponent(text)}` : ''}`;
 
+/** Main menu. */
 export const nav = [
-  { href: '/custom-box/', label: 'Price your box' },
-  { href: '/products/', label: 'Boxes in packs' },
+  { href: '/shop/', label: 'Shop' },
+  { href: '/custom-box/', label: 'Custom size' },
   { href: '/box-strength-calculator/', label: 'Strength calculator' },
-  { href: '/contact/', label: 'Contact' },
-  { href: '/account/', label: 'My orders' },
+  { href: '/contact/', label: 'Bulk & enquiries' },
 ];
+
+/** The strip above the header. Facts only: things the site really does. */
+export const promises = ['GST invoice with every order', 'Secure online payment', 'Any size made to order'];

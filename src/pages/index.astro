@@ -1,15 +1,23 @@
 ---
 import Base from '../layouts/Base.astro';
 import { BOX_W, BOX_H, boxSvgInner } from '../lib/box-svg';
+import { loadProducts } from '../lib/products';
+import { liveConfig } from '../lib/price-list';
+import { productTile } from '../lib/product-card';
+import { productHref } from '../lib/catalog';
+import { icon } from '../lib/icons';
 import { site, waHref } from '../site';
 
 const heroBox = { length: 400, width: 300, height: 250 };
-const check = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+const { products } = await loadProducts(liveConfig());
+const built = new Set(products.map((p) => p.slug));
+const featured = products.slice(0, 4);
 
-const range = [
-  { tag: '3 ply', title: 'Light-duty cartons', text: 'For light goods, retail packs and e-commerce shipping.', items: ['Garments, footwear, FMCG packs', 'Plain or printed', 'Lowest cost per box'] },
-  { tag: '5 ply', title: 'Heavy-duty cartons', text: 'Stronger walls for heavier goods and stacking in warehouses.', items: ['Electrical, hardware, food products', 'Better stacking strength', 'Our most ordered range'] },
-  { tag: '7 ply', title: 'Extra-heavy cartons', text: 'For heavy, fragile or export loads that travel far.', items: ['Machinery parts, ceramics, export', 'Highest bursting strength', 'Made to your exact size'] },
+const cats = [
+  { href: '/shop/?ply=3', title: '3 ply boxes', text: 'Light goods, retail and e-commerce parcels', icon: icon.box(28) },
+  { href: '/shop/?ply=5', title: '5 ply boxes', text: 'Heavier goods and warehouse stacking', icon: icon.layers(28) },
+  { href: '/shop/?ply=7', title: '7 ply boxes', text: 'Heavy, fragile and export loads', icon: icon.shield(28) },
+  { href: '/custom-box/', title: 'Custom size & print', text: 'Your size, your logo, priced instantly', icon: icon.print(28) },
 ];
 
 const faqs = [
@@ -22,77 +30,72 @@ const faqs = [
 ---
 
 <Base
-  title={`${site.name}: corrugated boxes made to your size, priced online`}
-  description="Corrugated boxes in any size: 3, 5 and 7 ply, plain or printed. Enter your size and quantity to see the price per box, bursting strength and weight instantly."
+  title={`${site.name}: buy corrugated boxes online`}
+  description="Shop 3, 5 and 7 ply corrugated boxes in packs, or price any custom size and printing instantly. Strength (BS) shown, GST invoice, secure online payment."
   jsonLd={{ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) }}
 >
-  <section class="hero">
+  <section class="hero2">
     <div class="container hero__grid">
       <div>
         <span class="hero__eyebrow">Corrugated box manufacturer</span>
-        <h1>Boxes made to your size. Price in seconds.</h1>
-        <p class="hero__lead">Tell us the size, ply and quantity. You'll see the price per box, how strong it is and what it weighs, before you call anyone.</p>
-        <ul class="hero__points">
-          <li><Fragment set:html={check} />3, 5 and 7 ply, any size</li>
-          <li><Fragment set:html={check} />Plain or printed with your logo, up to 4 colours</li>
-          <li><Fragment set:html={check} />GST invoice with every order</li>
-        </ul>
-        <div class="btn-row">
-          <a class="btn btn--primary" href="/custom-box/">Price your box</a>
-          {site.whatsapp ? <a class="btn btn--whatsapp" href={waHref(site.whatsapp, `Hi ${site.name}, I need corrugated boxes.`)} data-wa="hero">WhatsApp us</a> : <a class="btn btn--ghost" href="/contact/">Send an enquiry</a>}
+        <h1>Boxes ready to ship, or made to your size.</h1>
+        <p class="hero__lead">Order ready sizes in packs, or enter any size and see the price, strength and weight in seconds. Pay online and get a GST invoice.</p>
+        <div class="btn-row" style="margin-top:22px">
+          <a class="btn btn--primary" href="/shop/">Shop boxes</a>
+          <a class="btn btn--ghost" href="/custom-box/">Get a custom size</a>
         </div>
+        <ul class="hero__points" style="margin-top:22px">
+          <li><Fragment set:html={icon.check(18)} />3, 5 and 7 ply, plain or printed</li>
+          <li><Fragment set:html={icon.check(18)} />Bursting strength (BS) shown for every box</li>
+          <li><Fragment set:html={icon.check(18)} />UPI, cards and net banking</li>
+        </ul>
       </div>
-      <a class="hero__visual box3d" href="/custom-box/" aria-label="Open the box price calculator">
+      <a class="hero__visual box3d" href="/custom-box/" aria-label="Price a custom box">
         <svg viewBox={`0 0 ${BOX_W} ${BOX_H}`} aria-hidden="true" set:html={boxSvgInner(heroBox, { yaw: -0.62, pitch: 0.5 })} />
       </a>
     </div>
   </section>
 
-  <section class="section section--tint" id="range">
+  <section class="section" style="padding-bottom:0">
     <div class="container">
-      <h2>Boxes we make</h2>
-      <p class="section__intro">Regular slotted cartons (the standard brown shipping box) in the size you need. Every box is made to order.</p>
-      <div class="grid grid--3">
-        {range.map((r) => (
-          <article class="card range-card">
-            <span class="tag">{r.tag}</span>
-            <h3>{r.title}</h3>
-            <p>{r.text}</p>
-            <ul>{r.items.map((i) => <li>{i}</li>)}</ul>
-          </article>
+      <div class="cats">
+        {cats.map((c) => (
+          <a class="cat" href={c.href}>
+            <Fragment set:html={c.icon} />
+            <strong>{c.title}</strong>
+            <span>{c.text}</span>
+          </a>
         ))}
       </div>
     </div>
   </section>
 
-  <section class="section">
-    <div class="container">
-      <h2>How ordering works</h2>
-      <ol class="steps">
-        <li><h3>Enter your size</h3><p>Inside length, width and height, the board grade and the quantity.</p></li>
-        <li><h3>See the price</h3><p>Price per box, bursting strength and weight, and how much you save on bigger orders.</p></li>
-        <li><h3>Confirm</h3><p>Send it on WhatsApp or as an enquiry. We confirm the details and the delivery date.</p></li>
-        <li><h3>We make and deliver</h3><p>Your boxes are made to order and delivered with a GST invoice.</p></li>
-      </ol>
-    </div>
-  </section>
+  {featured.length > 0 && (
+    <section class="section" data-featured data-built={JSON.stringify([...built])}>
+      <div class="container">
+        <div class="section-head">
+          <h2>Ready to order</h2>
+          <a href="/shop/">View all boxes →</a>
+        </div>
+        <div class="tiles" data-tiles set:html={featured.map((p) => productTile(p, productHref(p, built))).join('')} />
+      </div>
+    </section>
+  )}
 
   <section class="section section--tint">
-    <div class="container grid grid--3">
-      <div class="feature">
-        <div class="feature__icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h2M12 10h2M16 10h0M8 14h2M12 14h2M8 18h8"/></svg></div>
-        <h3>Honest, open pricing</h3>
-        <p>The price comes from the paper in your box, the same calculation we use in the factory.</p>
-      </div>
-      <div class="feature">
-        <div class="feature__icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 3 7v10l9 5 9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg></div>
-        <h3>Strength you can check</h3>
-        <p>Every option shows its bursting strength (BS), so you pick the right ply instead of guessing.</p>
-      </div>
-      <div class="feature">
-        <div class="feature__icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></div>
-        <h3>GST invoice</h3>
-        <p>Proper tax invoice with HSN and GST, so business buyers can claim input tax credit.</p>
+    <div class="container">
+      <div class="custom-band">
+        <div>
+          <h2>Any size, priced in seconds</h2>
+          <p class="muted">Enter the inside length, width and height, choose the board and printing, and see the price per box, how much you save on bigger orders, the strength and the weight. Order and pay online.</p>
+          <ol class="steps" style="grid-template-columns:1fr;gap:10px;margin:16px 0 20px">
+            <li style="padding:14px"><h3 style="font-size:1rem">Enter your size</h3></li>
+            <li style="padding:14px"><h3 style="font-size:1rem">Pick board and printing</h3></li>
+            <li style="padding:14px"><h3 style="font-size:1rem">See the price and pay</h3></li>
+          </ol>
+          <a class="btn btn--primary" href="/custom-box/">Price your custom box</a>
+        </div>
+        <div class="box3d"><svg viewBox={`0 0 ${BOX_W} ${BOX_H}`} aria-hidden="true" set:html={boxSvgInner({ length: 300, width: 200, height: 150 }, { yaw: -0.9, pitch: 0.45 })} /></div>
       </div>
     </div>
   </section>
@@ -103,16 +106,22 @@ const faqs = [
       {faqs.map((f) => (
         <details><summary>{f.q}</summary><p>{f.a}</p></details>
       ))}
-    </div>
-  </section>
-
-  <section class="container">
-    <div class="cta-band">
-      <div>
-        <h2>Need boxes? See your price now.</h2>
-        <p>Any size, 3 to 7 ply, plain or printed.</p>
-      </div>
-      <a class="btn btn--primary" href="/custom-box/" style="background:#fff;color:var(--ink)">Price your box</a>
+      {site.whatsapp && <p style="margin-top:18px">Something else? <a href={waHref(site.whatsapp, `Hi ${site.name}, I have a question about boxes.`)} data-wa="faq">Ask us on WhatsApp</a>.</p>}
     </div>
   </section>
 </Base>
+
+<script>
+  import { catalog, productHref } from '../lib/catalog';
+  import { productTile } from '../lib/product-card';
+  import { wireTiles } from '../lib/add-to-cart';
+  const box = document.querySelector<HTMLElement>('[data-featured]');
+  if (box) {
+    const tiles = box.querySelector<HTMLElement>('[data-tiles]')!;
+    const built = new Set<string>(JSON.parse(box.dataset.built || '[]'));
+    wireTiles(tiles);
+    void catalog().then((r) => {
+      if (r.source === 'live') tiles.innerHTML = r.products.slice(0, 4).map((p) => productTile(p, productHref(p, built))).join('');
+    });
+  }
+</script>

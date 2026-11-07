@@ -1,0 +1,94 @@
+---
+import { icon } from '../lib/icons';
+---
+
+<dialog class="drawer" data-cart-drawer aria-labelledby="cart-title">
+  <div class="drawer__head">
+    <h2 id="cart-title">Your cart</h2>
+    <button class="icon-btn" type="button" data-close-cart aria-label="Close cart"><Fragment set:html={icon.close()} /></button>
+  </div>
+  <div class="drawer__body" data-drawer-body><p class="muted">Loading…</p></div>
+  <div class="drawer__foot" data-drawer-foot hidden>
+    <dl class="kv"><dt>Subtotal (before GST)</dt><dd data-drawer-subtotal>—</dd></dl>
+    <p class="small muted" style="margin:6px 0 12px">Delivery and GST are worked out at checkout.</p>
+    <a class="btn btn--primary btn--block" href="/checkout/">Checkout</a>
+    <a class="btn btn--ghost btn--block" href="/shop/" data-close-cart>Continue shopping</a>
+  </div>
+</dialog>
+
+<script>
+  import { priceCart } from '@honeypackers/box-core/pricing';
+  import { cartCount, readCart, writeCart } from '../lib/products';
+  import { catalog } from '../lib/catalog';
+  import { icon } from '../lib/icons';
+
+  const drawer = document.querySelector<HTMLDialogElement>('[data-cart-drawer]')!;
+  const body = drawer.querySelector<HTMLElement>('[data-drawer-body]')!;
+  const foot = drawer.querySelector<HTMLElement>('[data-drawer-foot]')!;
+  const inr = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const rs = (n: number) => `₹${inr.format(n)}`;
+  const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+
+  function badge() {
+    const n = cartCount(readCart());
+    document.querySelectorAll<HTMLElement>('[data-cart-badge]').forEach((b) => {
+      b.textContent = String(n);
+      b.hidden = n === 0;
+    });
+  }
+
+  async function render() {
+    const cart = readCart();
+    if (!cart.length) {
+      body.innerHTML = `<div class="drawer__empty">${icon.cart(40)}<p>Your cart is empty.</p><a class="btn btn--primary" href="/shop/">Shop boxes</a></div>`;
+      foot.hidden = true;
+      return;
+    }
+    const { products } = await catalog();
+    const c = priceCart(cart, products);
+    body.innerHTML =
+      c.lines
+        .map(
+          (l) => `<div class="mini-line">
+            <div><strong>${esc(l.product.name)}</strong><span class="small muted">Pack of ${l.pack.qty} · ${rs(l.pack.price)}</span></div>
+            <div class="qty" aria-label="Packs">
+              <button type="button" data-step="-1" data-id="${esc(l.product.id)}" data-pack="${l.pack.qty}" aria-label="One pack less">${icon.minus(16)}</button>
+              <span>${l.count}</span>
+              <button type="button" data-step="1" data-id="${esc(l.product.id)}" data-pack="${l.pack.qty}" aria-label="One pack more">${icon.plus(16)}</button>
+            </div>
+            <strong class="mini-line__amt">${rs(l.amount)}</strong>
+          </div>`,
+        )
+        .join('') + c.problems.map((p) => `<p class="notice small">${esc(p.message)}</p>`).join('');
+    drawer.querySelector('[data-drawer-subtotal]')!.textContent = rs(c.goods);
+    foot.hidden = !c.lines.length;
+  }
+
+  body.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-step]');
+    if (!b) return;
+    const next = readCart()
+      .map((l) => (l.productId === b.dataset.id && l.packQty === Number(b.dataset.pack) ? { ...l, count: Math.min(1000, l.count + Number(b.dataset.step)) } : l))
+      .filter((l) => l.count > 0);
+    writeCart(next);
+  });
+  document.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    if (t.closest('[data-open-cart]')) {
+      e.preventDefault();
+      void render();
+      drawer.showModal();
+    } else if (t.closest('[data-close-cart]') || t === drawer) drawer.close();
+  });
+  window.addEventListener('cart-change', () => {
+    badge();
+    if (drawer.open) void render();
+  });
+  window.addEventListener('storage', (e) => e.key === 'hp-cart' && badge());
+  badge();
+  // Pages ask for the cart to open after "Add to cart".
+  window.addEventListener('open-cart', () => {
+    void render();
+    if (!drawer.open) drawer.showModal();
+  });
+</script>

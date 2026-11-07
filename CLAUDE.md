@@ -7,7 +7,15 @@ Overall plan: BoxBook repo `docs/online-business-plan.md`. App + database + shar
 - Always ask questions as selectable choices (AskUserQuestion), never as open-ended text questions.
 
 ## Layout
-- `src/pages`: `index`, `custom-box` (price configurator), `products`, `cart`, `account`, `box-strength-calculator`, `contact`, `thanks`, `privacy`, `404`.
+- Storefront (redesign): `src/pages`: `index` (shop home), `shop` (grid + filters/sort/search), `products/[slug]` (static product pages) +
+  `product/` (any product by `?p=`), `checkout` (one page: boxes, delivery, inline SMS sign-in + details, pay), `custom-box`, `account`,
+  `box-strength-calculator`, `contact`, `thanks`, `privacy`, `404`. `public/_redirects`: `/cart/` → `/checkout/`, `/products/` → `/shop/`.
+- Shared UI: `components/Header.astro` (promo strip, search, menu, account, cart badge), `components/CartDrawer.astro` (<dialog> mini cart),
+  `components/Footer.astro` (trust strip + footer). `lib/icons.ts` (inline SVG), `lib/catalog.ts` (products + price list loaded once per page,
+  `productHref`, `fromPrice`), `lib/product-card.ts` (`productTile`), `lib/product-page.ts` (`productPageHtml`, `initProductPage`, `productJsonLd`),
+  `lib/add-to-cart.ts`, `scripts/product.ts`, `scripts/checkout.ts`.
+- Theme: `lib/theme.ts` `brandColor(PUBLIC_BRAND_COLOR)` (presets or hex, darkened to 4.5:1 for white text); `Base.astro` sets `--brand`;
+  every colour in `brand.css` is mixed from `--brand`.
 - `src/scripts/configurator.ts`: all price-page logic (no framework). `src/lib/box-svg.ts`: 3D box as an SVG string (box-core geometry,
   colours via CSS classes `.bx-*` in `brand.css`). `src/lib/price-list.ts`: live list from Supabase REST or the sample JSON (`fromDb` maps rows).
   `src/lib/quote-text.ts`: WhatsApp / enquiry text.
@@ -18,7 +26,7 @@ Overall plan: BoxBook repo `docs/online-business-plan.md`. App + database + shar
   box-core, never from the browser) + thin `netlify/functions/*.mts`; browser side `src/lib/pay.ts` (Razorpay checkout.js). SQL in BoxBook
   `…07_payments.sql` (`web_create_order`, `record_razorpay_payment`, service role only). Setup in README → Online payment.
 - Products + cart: `src/lib/products.ts` (rows → Product, live/sample load, browser cart in localStorage `hp-cart`), `src/lib/product-card.ts`
-  (card HTML shared by build and browser), pages `products.astro` / `cart.astro`; server `checkoutCart` in `netlify/lib/shop.ts` uses box-core `priceCart`.
+  (tile HTML shared by build and browser), pages `shop` / `products/[slug]` / `checkout`; server `checkoutCart` in `netlify/lib/shop.ts` uses box-core `priceCart`.
 - Enquiries: Netlify Forms + `netlify/functions/submission-created.mts` (`netlify/lib/enquiry.ts`) → Supabase `enquiries` → BoxBook Inbox.
 - `src/site.ts`: business details from `PUBLIC_*` env vars, nav. `src/styles/brand.css`: brand colours (override hub token variables only) + site components.
 - Linked deps (`file:`): `../rajesh-hub/packages/{tokens,web-growth}`, `../BoxBook/packages/box-core`. Netlify clones them (`scripts/netlify-build.sh`).

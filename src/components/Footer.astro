@@ -1,21 +1,41 @@
 ---
-import { nav, site, telHref, waHref } from '../site';
+import { site, telHref, waHref } from '../site';
+import { icon } from '../lib/icons';
 const year = new Date().getFullYear();
 ---
 
+<section class="trust-strip" aria-label="Why buy from us">
+  <div class="container trust-strip__grid">
+    <div><Fragment set:html={icon.ruler(26)} /><strong>Any size</strong><span>Made to your measurements</span></div>
+    <div><Fragment set:html={icon.layers(26)} /><strong>Strength shown</strong><span>BS and weight for every box</span></div>
+    <div><Fragment set:html={icon.receipt(26)} /><strong>GST invoice</strong><span>Claim input tax credit</span></div>
+    <div><Fragment set:html={icon.shield(26)} /><strong>Secure payment</strong><span>UPI, cards, net banking</span></div>
+  </div>
+</section>
 <footer class="site-footer">
   <div class="container">
-    <div class="site-footer__grid">
+    <div class="site-footer__grid site-footer__grid--4">
       <div>
         <h2>{site.name}</h2>
-        <p>{site.tagline}. 3, 5 and 7 ply cartons, plain or printed, priced online.</p>
+        <p>{site.tagline}. 3, 5 and 7 ply corrugated boxes, plain or printed.</p>
         {site.address && <p>{site.address}{site.city && `, ${site.city}`}</p>}
         {site.gstin && <p>GSTIN {site.gstin}</p>}
       </div>
       <div>
-        <h2>Pages</h2>
+        <h2>Shop</h2>
         <ul>
-          {nav.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+          <li><a href="/shop/">All boxes</a></li>
+          <li><a href="/shop/?ply=3">3 ply boxes</a></li>
+          <li><a href="/shop/?ply=5">5 ply boxes</a></li>
+          <li><a href="/custom-box/">Custom size &amp; printing</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Help</h2>
+        <ul>
+          <li><a href="/account/">My orders</a></li>
+          <li><a href="/box-strength-calculator/">Box strength calculator</a></li>
+          <li><a href="/contact/">Bulk orders &amp; enquiries</a></li>
           <li><a href="/privacy/">Privacy policy</a></li>
         </ul>
       </div>

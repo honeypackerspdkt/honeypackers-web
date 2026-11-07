@@ -1,0 +1,30 @@
+---
+import Base from '../../layouts/Base.astro';
+import { loadProducts } from '../../lib/products';
+import { liveConfig } from '../../lib/price-list';
+import { productJsonLd, productPageHtml } from '../../lib/product-page';
+import { site } from '../../site';
+import type { Product } from '@honeypackers/box-core/types';
+
+// One page per product known at build time (good for Google); the browser refreshes price and stock.
+export async function getStaticPaths() {
+  const { products } = await loadProducts(liveConfig());
+  return products.map((p) => ({ params: { slug: p.slug }, props: { product: p } }));
+}
+const { product } = Astro.props as { product: Product };
+const url = new URL(`/products/${product.slug}/`, site.url).href;
+---
+
+<Base
+  title={product.name}
+  description={`${product.name}: ${product.ply} ply corrugated box in packs. Price per box, strength (BS), weight and delivery. GST invoice included.`}
+  jsonLd={productJsonLd(product, url, site.name)}
+>
+  <div class="container" data-product-root data-slug={product.slug} set:html={productPageHtml(product)} />
+</Base>
+
+<script>
+  import { initProduct } from '../../scripts/product';
+  const root = document.querySelector<HTMLElement>('[data-product-root]')!;
+  void initProduct(root, root.dataset.slug!);
+</script>

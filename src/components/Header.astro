@@ -1,26 +1,46 @@
 ---
-import { nav, site } from '../site';
+import { nav, promises, site } from '../site';
+import { icon } from '../lib/icons';
 const path = Astro.url.pathname;
-const current = (href: string) => (href !== '/' && !href.includes('#') && path.startsWith(href) ? 'page' : undefined);
+const current = (href: string) => (path.startsWith(href) ? 'page' : undefined);
+const q = Astro.url.searchParams?.get?.('q') ?? '';
 ---
 
-<header class="site-header">
-  <div class="container site-header__bar">
+<div class="promo-bar">
+  <div class="container promo-bar__inner">
+    {promises.map((p) => <span><Fragment set:html={icon.check(14)} />{p}</span>)}
+  </div>
+</div>
+<header class="shop-header">
+  <div class="container shop-header__bar">
+    <details class="menu">
+      <summary aria-label="Menu"><Fragment set:html={icon.menu()} /></summary>
+      <nav class="menu__panel" aria-label="Menu">
+        <form action="/shop/" method="get" role="search" class="search search--menu">
+          <Fragment set:html={icon.search(18)} />
+          <input name="q" type="search" placeholder="Search boxes" aria-label="Search boxes" />
+        </form>
+        {nav.map((l) => <a href={l.href} aria-current={current(l.href)}>{l.label}</a>)}
+        <a href="/account/" aria-current={current('/account/')}>My orders</a>
+      </nav>
+    </details>
     <a class="brand" href="/">
       <img src="/favicon.svg" alt="" width="34" height="34" />
       <span>{site.name}</span>
     </a>
-    <nav class="site-nav" aria-label="Main">
-      {nav.slice(1).map((l) => <a href={l.href} aria-current={current(l.href)}>{l.label}</a>)}
-      <a class="btn btn--primary" href={nav[0].href} aria-current={current(nav[0].href)}>{nav[0].label}</a>
+    <form action="/shop/" method="get" role="search" class="search search--bar">
+      <Fragment set:html={icon.search(18)} />
+      <input name="q" type="search" value={q} placeholder="Search boxes: 3 ply, 300×200…" aria-label="Search boxes" />
+    </form>
+    <nav class="shop-nav" aria-label="Main">
+      {nav.slice(0, 3).map((l) => <a href={l.href} aria-current={current(l.href)}>{l.label}</a>)}
     </nav>
-    <details class="menu">
-      <summary aria-label="Menu">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
-      </summary>
-      <div class="menu__panel">
-        {nav.map((l) => <a href={l.href} aria-current={current(l.href)}>{l.label}</a>)}
-      </div>
-    </details>
+    <div class="shop-header__icons">
+      <a class="icon-btn" href="/account/" aria-label="My account and orders" aria-current={current('/account/')}><Fragment set:html={icon.user()} /></a>
+      <button class="icon-btn" type="button" data-open-cart aria-label="Cart">
+        <Fragment set:html={icon.cart()} />
+        <span class="badge" data-cart-badge hidden>0</span>
+      </button>
+    </div>
   </div>
 </header>

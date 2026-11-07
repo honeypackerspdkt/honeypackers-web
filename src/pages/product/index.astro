@@ -1,0 +1,14 @@
+---
+import Base from '../../layouts/Base.astro';
+---
+
+<!-- Any product by slug (/product/?p=…): for products added after the site was last built. -->
+<Base title="Box" description="Corrugated box in packs: price per box, strength and delivery.">
+  <div class="container" data-product-root><p class="muted" style="margin-top:24px">Loading…</p></div>
+</Base>
+
+<script>
+  import { initProduct } from '../../scripts/product';
+  const root = document.querySelector<HTMLElement>('[data-product-root]')!;
+  void initProduct(root, new URLSearchParams(location.search).get('p') || '');
+</script>
