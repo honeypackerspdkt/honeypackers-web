@@ -1,7 +1,7 @@
 # honeypackers-web: handoff for Claude Code
 
 Website for Honey Packers (corrugated boxes): Astro 7 static site on Netlify, from `rajesh-hub/templates/site`.
-Overall plan: BoxBook repo `docs/online-business-plan.md`. App + database + shared maths live in the BoxBook repo.
+Overall plan: `admin/docs/online-business-plan.md`. Site, admin (`admin/`), database schema (`admin/supabase`) and box maths (`packages/box-core`) all live in this repo.
 
 ## Working with the owner
 - Always ask questions as selectable choices (AskUserQuestion), never as open-ended text questions.
@@ -28,9 +28,9 @@ Overall plan: BoxBook repo `docs/online-business-plan.md`. App + database + shar
   `src/lib/quote-text.ts`: WhatsApp / enquiry text.
 - My orders (`/account/`): `src/lib/account.ts` (pure: rows → orders, totals, re-order, invoice company from `public_business`),
   `src/lib/account-api.ts` (lazy supabase-js: SMS sign-in `+91…`, `buyer_link` RPC, own orders via RLS), `src/scripts/account.ts` (UI).
-  The SMS goes through BoxBook's `send-sms-msg91` hook. jsPDF is a site dependency (deduped in astro.config) for the invoice PDF.
+  The SMS goes through the `send-sms-msg91` hook (`admin/supabase/functions`). jsPDF is a site dependency (deduped in astro.config) for the invoice PDF.
 - Payments: `netlify/lib/shop.ts` (`createShop`: payOrder, checkoutCustom, verifyPayment, webhook, paymentLink; HMAC checks; amounts from
-  box-core, never from the browser) + thin `netlify/functions/*.mts`; browser side `src/lib/pay.ts` (Razorpay checkout.js). SQL in BoxBook
+  box-core, never from the browser) + thin `netlify/functions/*.mts`; browser side `src/lib/pay.ts` (Razorpay checkout.js). SQL in
   `…07_payments.sql` (`web_create_order`, `record_razorpay_payment`, service role only). Setup in README → Online payment.
 - Products + cart: `src/lib/products.ts` (rows → Product, live/sample load, browser cart in localStorage `hp-cart`), `src/lib/product-card.ts`
   (tile HTML shared by build and browser), pages `shop` / `products/[slug]` / `checkout`; server `checkoutCart` in `netlify/lib/shop.ts` uses box-core `priceCart`.
@@ -42,12 +42,17 @@ Overall plan: BoxBook repo `docs/online-business-plan.md`. App + database + shar
   The order preview PNG shows every printed side with its name and size. At checkout the design + logo + preview PNG go to
   `checkout-custom`; `shop.ts` checks them (`cleanArtwork`, `imageFromDataUrl`), uploads to storage `private/<org>/artwork/<uuid>/` and
   passes `p_artwork` to `web_create_order` (orders.artwork). Links use `?p=plain|one|multi` (old `?c=n` still read).
-- Enquiries: Netlify Forms + `netlify/functions/submission-created.mts` (`netlify/lib/enquiry.ts`) → Supabase `enquiries` → BoxBook Inbox.
+- Enquiries: Netlify Forms + `netlify/functions/submission-created.mts` (`netlify/lib/enquiry.ts`) → Supabase `enquiries` → admin Inbox.
 - `src/site.ts`: business details from `PUBLIC_*` env vars, nav. `src/styles/brand.css`: brand colours (override hub token variables only) + site components.
-- BoxBook (the admin app) is deployed and configured on its own (owner's choice, 9 Nov 2026); this site no longer builds it.
-  The site still needs the BoxBook repo for `packages/box-core` (prices, artwork, 3D box).
-  Supabase project "honeypackerspdkt's Project" (ref `gvsjdrsydgbkdxrgmlmb`, Mumbai, org honeypackerspdkt) holds BoxBook's migrations 01–09 (the earlier `wungbckyjamjwbxrfkle` project in Paavai-Embroidery is no longer used).
-- Linked deps (`file:`): `../rajesh-hub/packages/{tokens,web-growth}`, `../BoxBook/packages/box-core`. Netlify clones them (`scripts/netlify-build.sh`).
+- Admin: `admin/` is Honey Packers' own copy of the BoxBook app (copied 9 Nov 2026; BoxBook is now a separate product with
+  its own repo and database, deployed later; changes there do not reach this repo). React 19 + Vite, own package.json and tests
+  (`cd admin && npm test`, `npx tsc -b`). Built into `dist/admin/` by `scripts/build-admin.sh` (run by `netlify-build.sh`;
+  `VITE_SUPABASE_*` default to the site's `PUBLIC_SUPABASE_*`, `VITE_SHOP_URL` to Netlify's `URL`). Served at `/admin/`, noindex.
+  Database schema for Honey Packers: `admin/supabase/migrations` (applied to the honeypackerspdkt project). Its notes: `admin/docs`.
+- Box maths: `packages/box-core` (`@honeypackers/box-core`, linked `file:./packages/box-core`; the admin links `file:../packages/box-core`).
+  Its tests run with the site's `npm test` (vitest.config.ts).
+  Supabase project "honeypackerspdkt's Project" (ref `gvsjdrsydgbkdxrgmlmb`, Mumbai, org honeypackerspdkt) holds the migrations 01–09 in `admin/supabase/migrations` (the earlier `wungbckyjamjwbxrfkle` project in Paavai-Embroidery is no longer used).
+- Linked deps (`file:`): `../rajesh-hub/packages/{tokens,web-growth}` (admin also ui, print, supabase-kit). Netlify clones rajesh-hub (`scripts/netlify-build.sh`).
 
 ## Rules
 - Prices only through box-core (`priceCustomBox` etc.); never re-implement box maths here.

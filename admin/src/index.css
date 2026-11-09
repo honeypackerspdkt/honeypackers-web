@@ -1,0 +1,88 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@rajesh-hub/tokens/app.css";
+@import "@rajesh-hub/tokens/mobile.css";
+
+/* Let Tailwind see the class names used inside the shared components. */
+@source "../node_modules/@rajesh-hub/ui/src";
+
+/* BoxBook's bottom menu is corrugated-board brown. Only the sidebar tokens (which the hub's
+   BottomNav reads) are overridden; the rest of the hub theme is untouched. */
+:root {
+  /* Brand accent: carton brown (white text on it is 6.2:1). */
+  --primary: #8a5524;
+  --primary-foreground: #ffffff;
+  --ring: #8a5524;
+  --accent: #efdfc6;
+  --accent-foreground: #3d2a14;
+  --sidebar: #c8a06b;
+  --sidebar-foreground: #1c1103;
+  --sidebar-primary: #7a4a1a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #b58b55;
+  --sidebar-accent-foreground: #3d2a14;
+  --sidebar-border: #b58b55;
+  --sidebar-ring: #7a4a1a;
+}
+.dark {
+  --primary: #e5ac66;
+  --primary-foreground: #2a1c0d;
+  --ring: #e5ac66;
+  --accent: #3b2d1c;
+  --accent-foreground: #ebd9bc;
+  --sidebar: #4b3722;
+  --sidebar-foreground: #ebd9bc;
+  --sidebar-primary: #e5ac66;
+  --sidebar-primary-foreground: #2a1c0d;
+  --sidebar-accent: #5d452a;
+  --sidebar-accent-foreground: #ebd9bc;
+  --sidebar-border: #62492c;
+  --sidebar-ring: #e5ac66;
+}
+
+/* Status colours the hub has no token for yet, mapped onto its palette. */
+@theme inline {
+  --color-good: var(--chart-4);
+  --color-warn: var(--gold);
+  --color-bad: var(--destructive);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 2px 8px rgb(0 0 0 / 0.04);
+  --shadow-lift: 0 8px 28px rgb(0 0 0 / 0.16);
+}
+
+html, body, #root { height: 100%; }
+body {
+  @apply antialiased;
+  /* Phones: the header and bottom bar handle the safe areas themselves. */
+  padding: 0;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+input, textarea, select { user-select: text; -webkit-user-select: text; }
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.tnum { font-variant-numeric: tabular-nums; }
+
+/* Tailwind 4 only lets @apply use utilities, so the shared button base is one. */
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-[15px] font-semibold transition disabled:opacity-40;
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded-xl border border-input bg-card px-3.5 py-3 text-[15px] text-foreground outline-none transition
+           placeholder:text-muted-foreground/60 focus:border-ring focus:ring-4 focus:ring-ring/20;
+  }
+  .label { @apply mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-muted-foreground; }
+  .card { @apply rounded-2xl border border-border/70 bg-card text-card-foreground shadow-card; }
+  .btn-primary { @apply btn bg-primary text-primary-foreground shadow-sm; }
+  .btn-ghost { @apply btn bg-muted text-foreground; }
+  .btn-danger { @apply btn bg-destructive/10 text-destructive; }
+  .chip { @apply inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold; }
+}
+
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes page-in { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+.anim-fade { animation: fade-in .2s ease-out; }
+.anim-page { animation: page-in .22s cubic-bezier(.2,.8,.2,1); }
+@media (prefers-reduced-motion: reduce) { .anim-fade, .anim-page { animation: none; } }

@@ -1,5 +1,5 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "src", "scripts", "netlify"],
-  "exclude": ["dist"]
+  "exclude": ["dist", "admin", "packages"]
 }
