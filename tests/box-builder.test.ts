@@ -14,12 +14,22 @@ describe('home box builder', () => {
     if (r.kind !== 'price' || !core.ok) throw new Error('no price');
     expect(r.unitPrice).toBe(core.unitPrice);
     expect(r.amount).toBe(core.amount);
-    expect(r.orderHref).toBe('/custom-box/?l=300&w=200&h=150&g=5-150-120&c=0&q=500');
+    expect(r.orderHref).toBe('/custom-box/?l=300&w=200&h=150&g=5-150-120&p=plain&q=500');
   });
   it('turns inches into mm before pricing', () => {
     expect(toMm(11.8, 'in')).toBe(300);
     const r = builderResult({ ...base, unit: 'in', l: 11.8, w: 7.9, h: 5.9 }, shop);
     expect(r.kind === 'price' && r.orderHref).toContain('l=300&w=201&h=150');
+  });
+  it('keeps the exact mm typed before switching to inches', () => {
+    const shown: BuilderInput = { ...base, unit: 'in', l: 11.8, w: 7.9, h: 5.9, mm: { l: 300, w: 200, h: 150 } };
+    const r = builderResult(shown, shop);
+    expect(r.kind === 'price' && r.orderHref).toContain('l=300&w=200&h=150');
+    expect(r).toEqual(builderResult(base, shop));
+    expect(builderText(shown, shop, r)).toContain('Inside size: 11.8 × 7.9 × 5.9 inch (300 × 200 × 150 mm)');
+    // A size edited in inches is converted from the new inch value.
+    const edited = builderResult({ ...shown, w: 8, mm: { l: 300, h: 150 } }, shop);
+    expect(edited.kind === 'price' && edited.orderHref).toContain('l=300&w=203&h=150');
   });
   it('sends die-cut boxes, hidden prices and problems to a quote', () => {
     expect(builderResult({ ...base, style: 'diecut' }, shop).kind).toBe('quote');
@@ -31,7 +41,7 @@ describe('home box builder', () => {
     expect(gradesFor(shop, 3).map((g) => g.id)).toEqual(['3-120-18', '3-150-20']);
     const t = builderText({ ...base, colours: 2 }, shop, builderResult({ ...base, colours: 2 }, shop));
     expect(t).toContain('Inside size: 300 × 200 × 150 mm');
-    expect(t).toContain('Printing: 2 colours');
+    expect(t).toContain('Printing: multicolour');
     expect(t).toMatch(/Website price: ₹\d+\.\d\d a box \+ GST/);
   });
 });

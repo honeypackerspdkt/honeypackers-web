@@ -13,7 +13,7 @@ Astro static site on Netlify, started from `rajesh-hub/templates/site`. Prices c
 | `/checkout/` | One-page checkout: boxes → delivery → sign in by SMS code + details (GSTIN, address) → Pay securely. Before payments are live it offers WhatsApp / enquiry instead |
 | `/custom-box/` | Any size: live price, 3D box, slabs, order & pay |
 | `/account/` | My orders: SMS sign-in, orders, invoices, pay what's due, order again |
-| `/box-strength-calculator/`, `/contact/`, `/privacy/`, `/thanks/`, `/404` | |
+| `/contact/`, `/privacy/`, `/thanks/`, `/404` | |
 Every page: promo strip, header (search, menu, account, cart with count), slide-in mini cart, trust strip, footer.
 Old addresses `/cart/` and `/products/` redirect (`public/_redirects`).
 

@@ -10,6 +10,11 @@ import { site } from '../site';
 // swaps in the live list (Supabase) when it is configured.
 const { shop } = samplePriceList();
 const start = { length: 300, width: 200, height: 150 };
+const prints = [
+  { id: 'plain', label: 'Plain' },
+  { id: 'one', label: '1 colour' },
+  { id: 'multi', label: 'Multicolour' },
+];
 const live = Boolean(import.meta.env.PUBLIC_SUPABASE_URL && import.meta.env.PUBLIC_SHOP_ORG_ID);
 ---
 
@@ -51,12 +56,29 @@ const live = Boolean(import.meta.env.PUBLIC_SUPABASE_URL && import.meta.env.PUBL
 
           <div class="card form-grid">
             <h2 style="font-size:1.2rem;margin:0">3. Printing</h2>
-            <div class="chips" role="radiogroup" aria-label="Printed colours" data-colours>
-              {[0, 1, 2, 3, 4].map((c) => (
-                <label><input type="radio" name="colours" value={c} checked={c === 0} /><span>{c === 0 ? 'Plain' : `${c} colour${c > 1 ? 's' : ''}`}</span></label>
+            <div class="chips" role="radiogroup" aria-label="Printing" data-colours>
+              {prints.map((p) => (
+                <label><input type="radio" name="print" value={p.id} checked={p.id === 'plain'} /><span>{p.label}</span></label>
               ))}
             </div>
-            <p class="small muted" style="margin:0">Your logo and text printed on the box. Plate cost is included in the price.</p>
+            <p class="small muted" style="margin:0" data-print-note>Plain kraft box, no printing.</p>
+
+            <div class="art" data-art hidden>
+              <div class="art__tools">
+                <label class="btn btn--ghost btn--sm art__file"><input type="file" accept="image/png,image/jpeg,image/webp" data-art-file />Add logo</label>
+                <button type="button" class="btn btn--ghost btn--sm" data-art-addtext>Add text</button>
+                <label class="art__ink">Ink <select data-art-ink></select></label>
+              </div>
+              <div class="art__sides" role="group" aria-label="Side of the box to design" data-art-sides></div>
+              <div class="art__stage"><canvas data-art-canvas tabindex="0" aria-label="Front of the box. Drag your logo and text into place; arrow keys move the selected item."></canvas></div>
+              <p class="small muted art__help">Pick a side, add your logo or text and drag it into place (orange corner to resize). The 3D box shows every side. <a class="art__see" href="#box3d">See it on the 3D box ↓</a> <span data-art-hint></span></p>
+              <div class="art__edit" data-art-edit hidden>
+                <label class="field" data-art-textwrap><span>Text</span><input data-art-text maxlength="60" /></label>
+                <label class="field"><span>Size</span><input type="range" min="5" max="100" data-art-size /></label>
+                <label class="field" data-art-colorwrap><span>Colour</span><select data-art-color></select></label>
+                <button type="button" class="btn btn--ghost btn--sm" data-art-delete>Remove</button>
+              </div>
+            </div>
           </div>
 
           <div class="card form-grid">
@@ -69,7 +91,7 @@ const live = Boolean(import.meta.env.PUBLIC_SUPABASE_URL && import.meta.env.PUBL
         </form>
 
         <aside class="config__aside" aria-live="polite">
-          <div class="card box3d" style="padding:12px">
+          <div class="card box3d" style="padding:12px;scroll-margin-top:140px" id="box3d">
             <svg viewBox={`0 0 ${BOX_W} ${BOX_H}`} role="img" tabindex="0" aria-label={boxLabel(start)} data-box set:html={boxSvgInner(start, defaultView)} />
             <div class="box3d__caption"><span data-box-caption>{start.length} × {start.width} × {start.height} mm (L × W × H)</span><span>Drag to turn</span></div>
           </div>
@@ -119,7 +141,7 @@ const live = Boolean(import.meta.env.PUBLIC_SUPABASE_URL && import.meta.env.PUBL
       <h2>How the price is worked out</h2>
       <p>The price comes from the paper in your box: we work out the board sheet size from your measurements, the weight of each paper layer (the fluted layers use about 40% more paper), and add converting, printing and our margin. Bigger orders get a lower margin. This is the same calculation we use in our factory, so the price you see is the price you pay. GST at 5% (HSN 4819) is added on top.</p>
       <h2>What is BS?</h2>
-      <p>Bursting strength (BS, in kg/cm²) tells you how much pressure the board takes before it bursts. It comes from the GSM and BF of each paper layer. Use our <a href="/box-strength-calculator/">box strength calculator</a> to compare papers.</p>
+      <p>Bursting strength (BS, in kg/cm²) tells you how much pressure the board takes before it bursts. It comes from the GSM and BF of each paper layer. The price above shows the BS of the board you pick, so you can compare grades.</p>
     </div>
   </section>
 </Base>

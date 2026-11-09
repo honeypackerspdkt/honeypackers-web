@@ -17,6 +17,13 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
+# The BoxBook admin app (built into dist/admin/ by scripts/build-admin.sh): never in search results.
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+    Cache-Control = "no-cache"
+
 [[headers]]
   for = "/_astro/*"
   [headers.values]

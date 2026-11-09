@@ -1,5 +1,5 @@
 ---
-import { nav, promises, site } from '../site';
+import { catNav, nav, promises, site } from '../site';
 import { icon } from '../lib/icons';
 const path = Astro.url.pathname;
 const current = (href: string) => (path.startsWith(href) ? 'page' : undefined);
@@ -42,4 +42,17 @@ const q = Astro.url.searchParams?.get?.('q') ?? '';
       </button>
     </div>
   </div>
+  <nav class="cat-bar" aria-label="Box categories">
+    <div class="container cat-bar__in">
+      {catNav.map((l) => <a href={l.href}>{l.label}</a>)}
+    </div>
+  </nav>
 </header>
+
+<script>
+  // The site is static, so the query (?ply=5) is only known in the browser: mark the matching category.
+  const here = location.pathname + location.search;
+  document.querySelectorAll<HTMLAnchorElement>('.cat-bar a').forEach((a) => {
+    if (a.getAttribute('href') === here) a.setAttribute('aria-current', 'page');
+  });
+</script>

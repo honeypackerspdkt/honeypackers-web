@@ -1,9 +1,10 @@
 /**
- * Brand colour of the shop. Kraft brown by default; set PUBLIC_BRAND_COLOR in Netlify to a preset name
- * (kraft, forest, ocean, charcoal, maroon, teal) or any hex colour, then redeploy.
+ * Brand colour of the shop. The logo's rust-brown by default; set PUBLIC_BRAND_COLOR in Netlify to a preset name
+ * (logo, kraft, forest, ocean, charcoal, maroon, teal) or any hex colour, then redeploy.
  * A colour too light for white button text is darkened until it reads well (WCAG AA, 4.5:1).
  */
 export const PRESETS: Record<string, string> = {
+  logo: '#8a3404', // rust-brown of the Honey Packers logo (default)
   kraft: '#8a5524',
   forest: '#2f6b45',
   ocean: '#24527a',
@@ -38,7 +39,7 @@ function darken(hex: string, f: number) {
 
 export function brandColor(setting: string | undefined): string {
   const raw = (setting || '').trim().toLowerCase();
-  let c = PRESETS[raw] || hex6(raw) || PRESETS.kraft;
+  let c = PRESETS[raw] || hex6(raw) || PRESETS.logo;
   for (let i = 0; i < 40 && whiteContrast(c) < 4.5; i++) c = darken(c, 0.93);
   return c;
 }

@@ -4,7 +4,8 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { advanceAmount, checkoutTotals, deliveryCharge, findZone, gradeLabel, priceCart, priceCustomBox, type CartLine, type WebShop } from '@honeypackers/box-core/pricing';
 import { defaultCompany } from '@honeypackers/box-core/company';
-import type { BoxSpec } from '@honeypackers/box-core/types';
+import { cleanArtwork, printColours, printKindOf, printLabel } from '@honeypackers/box-core/artwork';
+import type { BoxSpec, PrintKind } from '@honeypackers/box-core/types';
 import { orderView, ordersFromRows } from '../../src/lib/account';
 import { fromDb, type DeliveryZoneRow, type PriceRulesRow } from '../../src/lib/price-list';
 import { productFromRow } from '../../src/lib/products';
@@ -73,6 +74,21 @@ export function paymentFromEvent(e: Row): { paymentId: string; amount: number; r
   return { paymentId: String(pay.id), amount: Number(pay.amount) / 100, rzpOrderId: pay.order_id ? String(pay.order_id) : null, orderId, orgId };
 }
 
+/* ─────────────── artwork files ─────────────── */
+
+const MAX_IMAGE = 2 * 1024 * 1024;
+/** A PNG / JPEG / WebP data URL from the browser → bytes (null when missing, an error when not an allowed image). */
+export function imageFromDataUrl(v: unknown): { bytes: Uint8Array; type: string; ext: string } | null {
+  if (v == null || v === '') return null;
+  const m = /^data:(image\/(png|jpeg|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(v));
+  if (!m) bad(400, 'The logo must be a PNG, JPG or WebP picture.');
+  const bytes = Uint8Array.from(Buffer.from(m[3], 'base64'));
+  if (bytes.length > MAX_IMAGE) bad(400, 'The logo is too big (2 MB at most).');
+  const magic: Record<string, number[]> = { png: [0x89, 0x50, 0x4e, 0x47], jpeg: [0xff, 0xd8, 0xff], webp: [0x52, 0x49, 0x46, 0x46] };
+  if (!magic[m[2]].every((b, i) => bytes[i] === b)) bad(400, 'The logo file is not a valid picture.');
+  return { bytes, type: m[1], ext: m[2] === 'jpeg' ? 'jpg' : m[2] };
+}
+
 /* ─────────────── Supabase + Razorpay calls ─────────────── */
 
 function clients(d: ShopDeps) {
@@ -114,7 +130,16 @@ function clients(d: ShopDeps) {
     if (!r.ok) bad(502, `Payment service: ${out.error?.description || r.status}`);
     return out as T;
   };
-  return { rest, rpc, user, linkBuyer, razorpay };
+  /** Put a file in the private storage bucket (service role). */
+  const upload = async (path: string, bytes: Uint8Array, type: string) => {
+    const r = await d.fetch(`${base}/storage/v1/object/private/${path}`, {
+      method: 'POST',
+      headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`, 'content-type': type, 'x-upsert': 'true' },
+      body: bytes,
+    });
+    if (!r.ok) bad(502, 'Could not save your artwork. Please try again.');
+  };
+  return { rest, rpc, user, linkBuyer, razorpay, upload };
 }
 
 /** An order of this business with its lines, payments and amount due (from the rows, with box-core totals). */
@@ -197,7 +222,10 @@ export function createShop(d: ShopDeps) {
       const zones = await c.rest<DeliveryZoneRow[]>(`delivery_zones?org_id=eq.${org}&active=eq.true&deleted_at=is.null&select=*`);
       const shop: WebShop = fromDb(rules, zones);
       if (!shop.showPrices) bad(400, 'Online prices are switched off. Please send an enquiry.');
-      const input = { length: Number(b.length), width: Number(b.width), height: Number(b.height), gradeId: String(b.gradeId || ''), colours: Number(b.colours || 0), qty: Number(b.qty) };
+      const kind: PrintKind = ['plain', 'one', 'multi'].includes(String(b.print)) ? (String(b.print) as PrintKind) : printKindOf(Number(b.colours || 0));
+      const colours = printColours(kind, shop.rules.printing.maxColours);
+      if (kind !== 'plain' && colours === 0) bad(400, 'This printing is not offered online. Please send an enquiry.');
+      const input = { length: Number(b.length), width: Number(b.width), height: Number(b.height), gradeId: String(b.gradeId || ''), colours, qty: Number(b.qty) };
       const p = priceCustomBox(input, shop.rules);
       if (!p.ok) bad(400, p.message);
       const pin = String(b.pincode || '').replace(/\s/g, '');
@@ -207,10 +235,24 @@ export function createShop(d: ShopDeps) {
       if (delivery == null) bad(400, 'Courier delivery is priced by enquiry for now. Please send an enquiry.');
       if (shop.minOrderValue > 0 && p.amount < shop.minOrderValue) bad(400, `The minimum online order is ₹${shop.minOrderValue} before GST.`);
 
+      // The print design: checked like everything else from the browser; files go to private/<org>/artwork/<id>/.
+      const art = (b.artwork || {}) as Record<string, unknown>;
+      const design = cleanArtwork(art.design, kind, colours, { length: input.length, width: input.width, height: input.height });
+      const logo = design?.elements.some((e) => e.kind === 'logo') ? imageFromDataUrl(art.logo) : null;
+      if (design?.elements.some((e) => e.kind === 'logo') && !logo) bad(400, 'Please add the logo picture again.');
+      const preview = design ? imageFromDataUrl(art.preview) : null;
+
       await c.linkBuyer(req);
-      const colours = input.colours > 0 ? `, ${input.colours} colour print` : ', plain';
+      let artwork: Row = {};
+      if (design) {
+        const dir = `${org}/artwork/${crypto.randomUUID()}`;
+        if (logo) await c.upload(`${dir}/logo.${logo.ext}`, logo.bytes, logo.type);
+        if (preview) await c.upload(`${dir}/preview.${preview.ext}`, preview.bytes, preview.type);
+        artwork = { ...design, ...(logo ? { logo: `${dir}/logo.${logo.ext}` } : {}), ...(preview ? { preview: `${dir}/preview.${preview.ext}` } : {}) };
+      }
+      const printText = kind === 'plain' ? ', plain' : `, ${printLabel(kind, colours).toLowerCase()}${design ? ', artwork attached' : ''}`;
       const items = [
-        { description: `${p.grade.label || gradeLabel(p.grade)} box ${input.length}×${input.width}×${input.height} mm${colours}`, qty: p.qty, rate: p.unitPrice, hsn: '48191010', unit: 'Nos.', spec: publicSpec(p.spec) },
+        { description: `${p.grade.label || gradeLabel(p.grade)} box ${input.length}×${input.width}×${input.height} mm${printText}`, qty: p.qty, rate: p.unitPrice, hsn: '48191010', unit: 'Nos.', spec: publicSpec(p.spec) },
         ...(delivery > 0 ? [{ description: `Delivery (${zone.name})`, qty: 1, rate: delivery }] : []),
       ];
       const made = await c.rpc<{ id: string; number: string }>('web_create_order', {
@@ -219,7 +261,8 @@ export function createShop(d: ShopDeps) {
         p_items: items,
         p_delivery: { pincode: pin, zone: zone.name, mode: zone.mode, charge: delivery, days: zone.days },
         p_tax_pct: TAX_PCT,
-        p_notes: 'Ordered on the website',
+        p_notes: kind !== 'plain' && !design ? 'Ordered on the website. Printed box: artwork to be sent by the buyer.' : 'Ordered on the website',
+        p_artwork: artwork,
       });
       const total = checkoutTotals(p.amount, delivery, TAX_PCT).total;
       return json(200, await checkoutFor(made.id, made.number, advanceAmount(total, shop.advancePct), u.phone, ''));

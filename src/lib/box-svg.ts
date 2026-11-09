@@ -1,4 +1,4 @@
-import { AXIS_NAMES, dimensionLines, project, type Dims, type View } from '@honeypackers/box-core/box3d';
+import { AXIS_NAMES, BOX_SIDES, dimensionLines, project, sideOnScreen, type BoxSide, type Dims, type View } from '@honeypackers/box-core/box3d';
 
 /**
  * The BoxBook 3D box as an SVG string (no framework), using the same geometry as the app's Box3D.
@@ -14,7 +14,11 @@ const f1 = (n: number) => (Math.round(n * 10) / 10).toString();
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 const fmt = (n: number) => n.toLocaleString('en-IN', { maximumFractionDigits: 1 });
 
-export function boxSvgInner(d: Dims, view: View, showDims = true): string {
+/**
+ * `art`: a picture (URL) per side, wrapped onto that side when it faces the viewer. The picture is mapped with an
+ * affine transform from three corners (the projection's perspective is mild) and clipped to the side's outline.
+ */
+export function boxSvgInner(d: Dims, view: View, showDims = true, art: Partial<Record<BoxSide, string>> = {}): string {
   const pr = project(d, view, RADIUS, CX, CY);
   const out: string[] = [];
   out.push(`<ellipse class="bx-shadow" cx="${CX}" cy="${f1(CY + RADIUS * 0.92)}" rx="${f1(RADIUS * 1.05)}" ry="${f1(RADIUS * 0.17)}"/>`);
@@ -27,6 +31,17 @@ export function boxSvgInner(d: Dims, view: View, showDims = true): string {
   for (const f of faces) {
     const pts = f.idx.map((i) => `${f1(pr.pts[i].x)},${f1(pr.pts[i].y)}`).join(' ');
     out.push(`<polygon class="bx-face" style="--shade:${f.shade.toFixed(3)}" points="${pts}"/>`);
+  }
+  for (const side of BOX_SIDES) {
+    const href = art[side];
+    if (!href) continue;
+    const o = sideOnScreen(pr, side);
+    if (!o.visible) continue;
+    const m = [o.tr.x - o.tl.x, o.tr.y - o.tl.y, o.bl.x - o.tl.x, o.bl.y - o.tl.y, o.tl.x, o.tl.y].map((n) => n.toFixed(2)).join(' ');
+    out.push(
+      `<clipPath id="bx-clip-${side}"><polygon points="${o.poly.map((p) => `${f1(p.x)},${f1(p.y)}`).join(' ')}"/></clipPath>` +
+        `<g clip-path="url(#bx-clip-${side})"><image class="bx-art" href="${esc(href)}" x="0" y="0" width="1" height="1" preserveAspectRatio="none" transform="matrix(${m})"/></g>`,
+    );
   }
   // where the top / bottom flaps meet: join the midpoints of the width-wise sides
   for (const f of faces.filter((x) => x.axis === 1)) {

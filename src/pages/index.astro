@@ -7,6 +7,7 @@ import { liveConfig } from '../lib/price-list';
 import { productTile } from '../lib/product-card';
 import { productHref } from '../lib/catalog';
 import { site, waHref } from '../site';
+import { icon } from '../lib/icons';
 import '../styles/home.css';
 
 const { products } = await loadProducts(liveConfig());
@@ -14,17 +15,33 @@ const built = new Set(products.map((p) => p.slug));
 const featured = products.slice(0, 4);
 const words = site.name.toUpperCase().split(/\s+/);
 
-const range = [
-  { n: '01 / 03', tag: 'Everyday essential', title: 'Corrugated cartons', text: 'Reliable, well-fitted protection from warehouse to doorstep. Ready sizes in packs.', cta: 'Shop ready sizes', href: '/shop/', dims: { length: 400, width: 300, height: 250 }, yaw: -0.62 },
-  { n: '02 / 03', tag: 'A better unboxing', title: 'Die-cut & mailers', text: 'Smarter folds and neat mailer boxes for products that ship to customers.', cta: 'Ask for a quote', href: '#configure', style: 'diecut', dims: { length: 320, width: 240, height: 90 }, yaw: -0.85 },
-  { n: '03 / 03', tag: 'Your brand, front & centre', title: 'Printed packaging', text: 'Your logo in up to four colours. Priced instantly with the plate cost included.', cta: 'Price a printed box', href: '#configure', print: '1', dims: { length: 300, width: 300, height: 300 }, yaw: -0.5 },
+const plies = new Set(products.map((p) => p.ply));
+/** Shop filter when ready boxes of that ply exist, otherwise the box builder. */
+const plyHref = (n: number) => (plies.has(n as 3 | 5 | 7) ? `/shop/?ply=${n}` : '#configure');
+
+type Link = { href: string; preset?: boolean; style?: string; print?: string; dims: { length: number; width: number; height: number }; yaw: number };
+const promos: (Link & { tone: string; kicker: string; title: string; cta: string })[] = [
+  { tone: 'orange', kicker: 'Ready sizes', title: 'Corrugated boxes in ready packs', cta: 'Shop boxes', href: '/shop/', dims: { length: 400, width: 300, height: 250 }, yaw: -0.62 },
+  { tone: 'cream', kicker: '1 colour or multicolour', title: 'Custom printed boxes, priced instantly', cta: 'Start customising', href: '#configure', preset: true, print: '1', dims: { length: 300, width: 300, height: 300 }, yaw: -0.5 },
+  { tone: 'brown', kicker: 'Built for heavy loads', title: 'Export boxes in 5 and 7 ply', cta: 'Get a quote', href: '#quote', dims: { length: 500, width: 400, height: 400 }, yaw: -0.75 },
 ];
 
-const steps = [
-  { t: 'Tell us your size', p: 'Enter the inside size, board and printing in the box builder, or pick a ready size.' },
-  { t: 'See the price', p: 'The price per box, strength and weight show instantly. Or send it to us for a quote.' },
-  { t: 'Approve and pay', p: 'Pay online by UPI, card or net banking and get a GST invoice.' },
-  { t: 'Delivered to you', p: 'Our vehicle or courier brings the boxes, ready for your packing line.' },
+const cats: (Link & { name: string; note: string })[] = [
+  { name: '3 ply boxes', note: 'Light goods and e-commerce parcels', href: plyHref(3), dims: { length: 250, width: 200, height: 120 }, yaw: -0.6 },
+  { name: '5 ply boxes', note: 'Heavier goods and warehouse stacking', href: plyHref(5), dims: { length: 400, width: 300, height: 250 }, yaw: -0.7 },
+  { name: '7 ply & export', note: 'Very heavy and export loads', href: plyHref(7), dims: { length: 500, width: 400, height: 400 }, yaw: -0.55 },
+  { name: 'Die-cut mailers', note: 'Neat mailer boxes for products you ship', href: '#configure', preset: true, style: 'diecut', dims: { length: 320, width: 240, height: 90 }, yaw: -0.85 },
+  { name: 'Printed boxes', note: 'Your brand on the box', href: '#configure', preset: true, print: '1', dims: { length: 300, width: 300, height: 300 }, yaw: -0.5 },
+  { name: 'Custom size', note: 'Any inside size, priced instantly', href: '/custom-box/', dims: { length: 600, width: 200, height: 200 }, yaw: -0.65 },
+];
+
+const checklist = ['Live 3D preview and instant price', 'Any inside size, in mm or inch', '3, 5 or 7 ply with the strength (BS) shown', 'Plain, 1 colour or multicolour, with your logo placed where you want'];
+
+const badges = [
+  { icon: icon.ruler(22), t: 'Any size made to order', s: 'Priced instantly online' },
+  { icon: icon.receipt(22), t: 'GST invoice', s: 'With every order' },
+  { icon: icon.shield(22), t: 'Secure online payment', s: 'UPI, card or net banking' },
+  { icon: icon.truck(22), t: 'Delivered to you', s: 'Our vehicle or courier' },
 ];
 
 const faqs = [
@@ -89,50 +106,59 @@ const faqs = [
     </div>
   </section>
 
-  <div class="caps">
-    <div class="container caps__in">
-      <div><span>01</span><strong>Made to measure</strong><small>Any size, priced instantly</small></div>
-      <div><span>02</span><strong>Built for strength</strong><small>3 / 5 / 7 ply, BS shown</small></div>
-      <div><span>03</span><strong>Branded your way</strong><small>Printing up to 4 colours</small></div>
-    </div>
-  </div>
+  <div class="hn">
+  <section class="promos chap chap--l" data-chapter="promos" data-word="Honey" aria-label="Featured">
+    <div class="container"><div class="promos__grid chap-item">
+      {promos.map((p) => (
+        <a class={`promo promo--${p.tone}`} href={p.href} data-preset={p.preset ? '' : undefined} data-style={p.style} data-print={p.print}>
+          <small>{p.kicker}</small>
+          <h3>{p.title}</h3>
+          <div class="promo__art box3d" aria-hidden="true"><svg viewBox={`0 0 ${BOX_W} ${BOX_H}`} set:html={boxSvgInner(p.dims, { yaw: p.yaw, pitch: 0.5 }, false)} /></div>
+          <b>{p.cta} <span aria-hidden="true">→</span></b>
+        </a>
+      ))}
+    </div></div>
+  </section>
 
-  {featured.length > 0 && (
-    <section class="section" data-featured data-built={JSON.stringify([...built])}>
-      <div class="container">
-        <div class="hs reveal">
-          <div><div class="hx-k"><i></i>Ready to order</div><h2 class="hx-h">Boxes in stock, <em>in packs.</em></h2></div>
-          <a href="/shop/">View all boxes →</a>
-        </div>
-        <div class="tiles" data-tiles set:html={featured.map((p) => productTile(p, productHref(p, built))).join('')} />
-      </div>
-    </section>
-  )}
-
-  <section class="section section--tint" id="products">
+  <section class="section chap chap--l" data-chapter="categories" data-word="Packaging" id="products">
     <div class="container">
-      <div class="hs reveal">
-        <div><div class="hx-k"><i></i>Our range</div><h2 class="hx-h">A box for<br /><em>every possibility.</em></h2></div>
-        <p>From simple shipping cartons to standout branded packaging, built around your product and your process.</p>
+      <div class="hs chap-move">
+        <div><div class="hx-k"><i></i>Shop by type</div><h2 class="hx-h">Packaging <em>categories</em></h2></div>
+        <a href="/shop/">View all boxes →</a>
       </div>
-      <div class="range">
-        {range.map((r) => (
-          <a class="range__card reveal" href={r.href} data-style={r.style} data-print={r.print}>
-            <div class="range__img box3d"><span>{r.n}</span><svg viewBox={`0 0 ${BOX_W} ${BOX_H}`} aria-hidden="true" set:html={boxSvgInner(r.dims, { yaw: r.yaw, pitch: 0.48 }, false)} /></div>
-            <div class="range__body"><small>{r.tag}</small><h3>{r.title}</h3><p>{r.text}</p><b>{r.cta} ↗</b></div>
+      <div class="cats2 chap-item">
+        {cats.map((c) => (
+          <a class="cat2" href={c.href} data-preset={c.preset ? '' : undefined} data-style={c.style} data-print={c.print}>
+            <div class="cat2__img box3d" aria-hidden="true"><svg viewBox={`0 0 ${BOX_W} ${BOX_H}`} set:html={boxSvgInner(c.dims, { yaw: c.yaw, pitch: 0.5 }, false)} /></div>
+            <div class="cat2__name">{c.name}</div>
+            <div class="cat2__note">{c.note}</div>
           </a>
         ))}
       </div>
     </div>
   </section>
 
-  <section class="section" id="configure">
-    <div class="container">
-      <div class="hs reveal">
-        <div><div class="hx-k"><i></i>Make it yours</div><h2 class="hx-h">Your box.<br /><em>Your size.</em></h2></div>
-        <p>Enter the inside size, choose the board and printing, and see the price per box. Order online or send it to us for a quote.</p>
+  {featured.length > 0 && (
+    <section class="section chap chap--r chap--tint" data-chapter="ready" data-word="Built" data-featured data-built={JSON.stringify([...built])}>
+      <div class="container">
+        <div class="hs chap-move">
+          <div><div class="hx-k"><i></i>Ready to order</div><h2 class="hx-h">Boxes in stock, <em>in packs.</em></h2></div>
+          <a href="/shop/">View all boxes →</a>
+        </div>
+        <div class="tiles chap-item" data-tiles set:html={featured.map((p) => productTile(p, productHref(p, built))).join('')} />
       </div>
-      <div class="bb" data-bb>
+    </section>
+  )}
+
+  <section class="section chap chap--l" data-chapter="configure" data-word="Custom" id="configure">
+    <div class="container">
+      <div class="hs chap-move">
+        <div><div class="hx-k"><i></i>3D box builder</div><h2 class="hx-h">Design your box.<br /><em>See the price.</em></h2></div>
+        <ul class="bb-list">
+          {checklist.map((t) => <li><Fragment set:html={icon.check(18)} />{t}</li>)}
+        </ul>
+      </div>
+      <div class="bb chap-item" data-bb>
         <form class="bb__form" data-bb-form onsubmit="return false">
           <div class="bb__head"><span>Custom box builder</span><span data-bb-status>Loading prices…</span></div>
           <div class="bb__q">
@@ -201,20 +227,19 @@ const faqs = [
     </div>
   </section>
 
-  <section class="section section--tint">
+  <section class="section chap chap--r chap--tint" data-chapter="service" data-word="Delivery" aria-label="Why order from us">
     <div class="container">
-      <div class="hs reveal">
-        <div><div class="hx-k"><i></i>Simple by design</div><h2 class="hx-h">From size<br /><em>to doorstep.</em></h2></div>
+      <div class="badges chap-item">
+        {badges.map((b) => (
+          <div class="badge2"><span><Fragment set:html={b.icon} /></span><strong>{b.t}</strong><small>{b.s}</small></div>
+        ))}
       </div>
-      <ol class="proc reveal">
-        {steps.map((s) => <li><h3>{s.t}</h3><p>{s.p}</p></li>)}
-      </ol>
     </div>
   </section>
 
-  <section class="section hq" id="quote">
+  <section class="section hq chap chap--l" data-chapter="quote" data-word="Let us build" id="quote">
     <div class="container hq__in">
-      <div>
+      <div class="chap-move">
         <div class="hx-k"><i></i>Let’s get started</div>
         <h2 class="hx-h">Good things come in <em>great boxes.</em></h2>
         <p>Have a box in mind, a bulk order or printing? Send us your requirements and we’ll get back to you with a quote.</p>
@@ -223,19 +248,20 @@ const faqs = [
           {site.phone && <a class="hx-link" href={`tel:${site.phone.replace(/[^\d+]/g, '')}`}>Call {site.phone}</a>}
         </div>
       </div>
-      <EnquiryForm subject="Quote from the home page box builder" />
+      <div class="chap-item"><EnquiryForm subject="Quote from the home page box builder" /></div>
     </div>
   </section>
 
-  <section class="section faq">
+  <section class="section faq chap chap--l" data-chapter="faq" data-word="Packers">
     <div class="container prose">
-      <h2>Questions</h2>
+      <h2 class="chap-move">Frequently asked questions</h2>
       {faqs.map((f) => (
         <details><summary>{f.q}</summary><p>{f.a}</p></details>
       ))}
       {site.whatsapp && <p style="margin-top:18px">Something else? <a href={waHref(site.whatsapp, `Hi ${site.name}, I have a question about boxes.`)} data-wa="faq">Ask us on WhatsApp</a>.</p>}
     </div>
   </section>
+  </div>
 </Base>
 
 <script>

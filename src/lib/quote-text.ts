@@ -9,7 +9,12 @@ export interface QuoteTextInput {
   bs?: number;
   pincode?: string;
   url?: string;
+  /** What the buyer designed, in words (logo / texts). */
+  artwork?: string;
 }
+
+/** Printing in words: plain, 1 colour or multicolour. */
+export const printWords = (colours: number) => (colours <= 0 ? 'plain' : colours === 1 ? '1 colour' : 'multicolour');
 
 const inr = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -18,7 +23,8 @@ export function quoteText(q: QuoteTextInput): string {
     `Hi${q.business ? ` ${q.business}` : ''}, I'd like a quote for corrugated boxes:`,
     `• Size: ${q.size.length} × ${q.size.width} × ${q.size.height} mm (inside L × W × H)`,
     q.grade && `• Board: ${q.grade}${q.bs ? ` (BS ${q.bs})` : ''}`,
-    `• Printing: ${q.colours > 0 ? `${q.colours} colour${q.colours > 1 ? 's' : ''}` : 'plain'}`,
+    `• Printing: ${printWords(q.colours)}`,
+    q.artwork && `• Artwork: ${q.artwork}`,
     `• Quantity: ${q.qty.toLocaleString('en-IN')} boxes`,
     q.unitPrice != null && `• Website price: ₹${inr.format(q.unitPrice)} per box + GST`,
     q.pincode && `• Delivery pincode: ${q.pincode}`,

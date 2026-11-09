@@ -23,7 +23,18 @@ export const waHref = (number: string, text?: string) => `https://wa.me/${number
 export const nav = [
   { href: '/shop/', label: 'Shop' },
   { href: '/custom-box/', label: 'Custom size' },
-  { href: '/box-strength-calculator/', label: 'Strength calculator' },
+  { href: '/contact/', label: 'Bulk & enquiries' },
+];
+
+/** Category bar under the header (every page). */
+export const catNav = [
+  { href: '/shop/', label: 'All boxes' },
+  { href: '/shop/?ply=3', label: '3 ply boxes' },
+  { href: '/shop/?ply=5', label: '5 ply boxes' },
+  { href: '/shop/?ply=7', label: '7 ply & export' },
+  { href: '/?box=diecut#configure', label: 'Die-cut mailers' },
+  { href: '/?box=printed#configure', label: 'Printed boxes' },
+  { href: '/custom-box/', label: 'Custom size' },
   { href: '/contact/', label: 'Bulk & enquiries' },
 ];
 

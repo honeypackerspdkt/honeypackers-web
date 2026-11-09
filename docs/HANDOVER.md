@@ -46,7 +46,7 @@ Optional: `cp .env.example .env` and fill in `PUBLIC_BUSINESS_NAME`, `PUBLIC_BUS
 - Home `/`: dark hero, the carton turns and opens as you scroll; box builder (size, mm/inch, ply, grade, printing, quantity → price);
   "Order & pay online" opens `/custom-box/` with the same price; the quote form is filled with the box details.
 - Shop `/shop/` (filters, sort, search), a product page, Add to cart → mini cart, `/checkout/` (shows "Send order on WhatsApp" without payments).
-- `/custom-box/`, `/box-strength-calculator/`, `/contact/`, `/account/` (says sign-in isn't set up without Supabase).
+- `/custom-box/`, `/contact/`, `/account/` (says sign-in isn't set up without Supabase).
 - Phone width (390 px): no sideways scrolling; menu works.
 
 ## What does NOT work locally (expected)

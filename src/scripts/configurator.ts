@@ -1,9 +1,12 @@
 import { checkoutTotals, deliveryCharge, findZone, gradeLabel, priceCustomBox, slabFor, slabTable, type WebShop } from '@honeypackers/box-core/pricing';
-import { clampPitch, defaultView, type View } from '@honeypackers/box-core/box3d';
+import { clampPitch, defaultView, SIDE_VIEW, type View } from '@honeypackers/box-core/box3d';
 import { defaultCompany } from '@honeypackers/box-core/company';
 import { boxLabel, boxSvgInner } from '../lib/box-svg';
 import { liveConfig, loadPriceList, samplePriceList } from '../lib/price-list';
 import { quoteText } from '../lib/quote-text';
+import { printColours, printKindOf, printKindsFor } from '@honeypackers/box-core/artwork';
+import type { PrintKind } from '@honeypackers/box-core/types';
+import { createDesigner } from './artwork-designer';
 
 const TAX_PCT = defaultCompany.defaults.taxPct; // 5% for corrugated boxes (HSN 4819)
 const inr = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -20,6 +23,31 @@ export async function initConfigurator(root: HTMLElement) {
   let view: View = { ...defaultView };
   let canBuy = false;
   let liveLoaded = false;
+  const designer = createDesigner(root.querySelector<HTMLElement>('[data-art]')!, {
+    change: () => update(),
+    // Turn the 3D box to the side being designed.
+    side: (s) => turnTo(SIDE_VIEW[s]),
+    art: () => drawBox(),
+  });
+  let turning = 0;
+  /** Ease the 3D box to a view (straight there when motion is reduced). */
+  const turnTo = (to: View) => {
+    cancelAnimationFrame(turning);
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return void ((view = { ...to }), drawBox());
+    const from = { ...view };
+    // shortest way round
+    let dy = to.yaw - from.yaw;
+    dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+    const t0 = performance.now();
+    const step = (t: number) => {
+      const k = Math.min(1, (t - t0) / 450);
+      const e = 1 - (1 - k) ** 3;
+      view = { yaw: from.yaw + dy * e, pitch: from.pitch + (to.pitch - from.pitch) * e };
+      drawBox();
+      if (k < 1) turning = requestAnimationFrame(step);
+    };
+    turning = requestAnimationFrame(step);
+  };
 
   // Restore a shared link (?l=…&w=…&h=…&g=…&c=…&q=…&pin=…)
   const qs = new URLSearchParams(location.search);
@@ -32,7 +60,7 @@ export async function initConfigurator(root: HTMLElement) {
   setIf('length', qs.get('l'));
   setIf('width', qs.get('w'));
   setIf('height', qs.get('h'));
-  setIf('colours', qs.get('c'));
+  setIf('print', qs.get('p') || (qs.get('c') != null ? printKindOf(Number(qs.get('c'))) : null));
   setIf('qty', qs.get('q'));
   setIf('pincode', qs.get('pin'));
   const wantedGrade = qs.get('g');
@@ -45,7 +73,8 @@ export async function initConfigurator(root: HTMLElement) {
       width: num('width'),
       height: num('height'),
       gradeId: String(fd.get('grade') || ''),
-      colours: num('colours'),
+      print: (String(fd.get('print') || 'plain') as PrintKind),
+      colours: printColours(String(fd.get('print') || 'plain') as PrintKind, shop.rules.printing.maxColours),
       qty: Math.floor(num('qty')),
       pincode: String(fd.get('pincode') || '').trim(),
     };
@@ -57,18 +86,19 @@ export async function initConfigurator(root: HTMLElement) {
     sel.innerHTML = '';
     for (const g of shop.rules.grades) sel.add(new Option(g.label || gradeLabel(g), g.id));
     if (shop.rules.grades.some((g) => g.id === keep)) sel.value = keep;
-    // colours above the limit are not offered
+    // printing the price list does not allow is not offered
+    const kinds = printKindsFor(shop.rules.printing.maxColours);
     root.querySelectorAll<HTMLInputElement>('[data-colours] input').forEach((r) => {
-      const hide = Number(r.value) > shop.rules.printing.maxColours;
+      const hide = !kinds.includes(r.value as PrintKind);
       r.closest('label')!.hidden = hide;
-      if (hide && r.checked) (root.querySelector<HTMLInputElement>('[data-colours] input[value="0"]')!).checked = true;
+      if (hide && r.checked) (root.querySelector<HTMLInputElement>('[data-colours] input[value="plain"]')!).checked = true;
     });
   };
 
   const drawBox = () => {
     const s = read();
     const dims = { length: s.length || 300, width: s.width || 200, height: s.height || 150 };
-    svg.innerHTML = boxSvgInner(dims, view);
+    svg.innerHTML = boxSvgInner(dims, view, true, designer.sideArt());
     svg.setAttribute('aria-label', boxLabel(dims));
     $('[data-box-caption]').textContent = `${inr0.format(dims.length)} × ${inr0.format(dims.width)} × ${inr0.format(dims.height)} mm (L × W × H)`;
   };
@@ -78,10 +108,17 @@ export async function initConfigurator(root: HTMLElement) {
   const update = () => {
     const s = read();
     // Shareable link first, so the WhatsApp / enquiry text carries the current one.
-    const q = new URLSearchParams({ l: String(s.length), w: String(s.width), h: String(s.height), g: s.gradeId, c: String(s.colours), q: String(s.qty) });
+    const q = new URLSearchParams({ l: String(s.length), w: String(s.width), h: String(s.height), g: s.gradeId, p: s.print, q: String(s.qty) });
     if (s.pincode) q.set('pin', s.pincode);
     history.replaceState(null, '', `${location.pathname}?${q}`);
     drawBox();
+    designer.setKind(s.print);
+    designer.setBox(s.length, s.width, s.height);
+    $('[data-print-note]').textContent =
+      s.print === 'plain'
+        ? 'Plain kraft box, no printing.'
+        : `${s.print === 'one' ? 'One ink colour' : `Multicolour, up to ${s.colours} colours`}. Add your logo and text below and drag them where you want them. Plate cost is included in the price.`;
+    const artText = designer.describe();
     const p = priceCustomBox(s, shop.rules);
     const grade = shop.rules.grades.find((g) => g.id === s.gradeId);
     const priced = shop.showPrices && p.ok;
@@ -135,11 +172,11 @@ export async function initConfigurator(root: HTMLElement) {
           return `<tr aria-current="${slab && current && slab.minQty === current.minQty ? 'true' : 'false'}"><td>${inr0.format(r.minQty)}+ boxes</td><td>${rs(r.unitPrice)}</td></tr>`;
         })
         .join('');
-      text = quoteText({ business, size: s, grade: grade ? grade.label || gradeLabel(grade) : '', colours: s.colours, qty: p.qty, unitPrice: shop.showPrices ? p.unitPrice : undefined, bs: p.box.bs, pincode: s.pincode, url: location.href });
+      text = quoteText({ business, size: s, grade: grade ? grade.label || gradeLabel(grade) : '', colours: s.colours, qty: p.qty, unitPrice: shop.showPrices ? p.unitPrice : undefined, bs: p.box.bs, pincode: s.pincode, url: location.href, artwork: artText });
     } else {
       canBuy = false;
       $('[data-bad-msg]').textContent = p.message;
-      text = quoteText({ business, size: s, grade: grade ? grade.label || gradeLabel(grade) : '', colours: s.colours, qty: s.qty, pincode: s.pincode, url: location.href });
+      text = quoteText({ business, size: s, grade: grade ? grade.label || gradeLabel(grade) : '', colours: s.colours, qty: s.qty, pincode: s.pincode, url: location.href, artwork: artText });
     }
 
     const buy = root.querySelector<HTMLButtonElement>('[data-buy]');
@@ -188,7 +225,9 @@ export async function initConfigurator(root: HTMLElement) {
         return;
       }
       const s = read();
-      const start = await callFn<import('../lib/pay').CheckoutStart>('checkout-custom', token, s);
+      const artwork = designer.payload();
+      const start = await callFn<import('../lib/pay').CheckoutStart>('checkout-custom', token, { ...s, ...(artwork ? { artwork } : {}) });
+      designer.clear();
       const r = await pay(start, token);
       if (r.status === 'closed') say(`Order ${start.orderNumber} is saved in My orders. You can pay there when you are ready.`);
       else location.href = `/account/?paid=${encodeURIComponent(r.orderNumber)}`;

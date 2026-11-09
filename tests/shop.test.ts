@@ -9,6 +9,7 @@ type Row = Record<string, unknown>;
 let db: Record<string, Row[]>;
 let rzp: { orders: Row[]; payments: Row[]; links: Row[] };
 let rpcCalls: { fn: string; args: Row; auth: string }[];
+let files: Record<string, { type: string; size: number; auth: string }>;
 
 function reset() {
   db = {
@@ -39,6 +40,7 @@ function reset() {
   };
   rzp = { orders: [], payments: [], links: [] };
   rpcCalls = [];
+  files = {};
 }
 
 const USERS: Record<string, Row> = { buyer: { id: 'u-buyer', phone: '919876543210' }, other: { id: 'u-other', phone: '919000000000' }, staff: { id: 'u-staff' }, prod: { id: 'u-prod' } };
@@ -48,6 +50,11 @@ const fakeFetch = (async (input: RequestInfo | URL, init: RequestInit = {}) => {
   const url = new URL(String(input));
   const headers = (init.headers || {}) as Record<string, string>;
   const method = init.method || 'GET';
+  if (url.host === 'db.test' && url.pathname.startsWith('/storage/v1/object/private/')) {
+    const bytes = init.body as Uint8Array;
+    files[url.pathname.slice('/storage/v1/object/private/'.length)] = { type: headers['content-type'], size: bytes.length, auth: headers.authorization };
+    return ok({ Key: url.pathname });
+  }
   const body = init.body ? JSON.parse(String(init.body)) : undefined;
   if (url.host === 'db.test') {
     if (url.pathname === '/auth/v1/user') {
@@ -62,7 +69,7 @@ const fakeFetch = (async (input: RequestInfo | URL, init: RequestInit = {}) => {
         const id = `o-${db.orders.length + 1}`;
         const number = `ORD-${String(db.orders.length + 8).padStart(4, '0')}`;
         const cust = db.customers.find((c) => c.user_id === body.p_user)!;
-        db.orders.push({ id, org_id: body.p_org, number, customer_id: cust.id, date: '2026-11-08', status: 'quote', discount: 0, tax_pct: body.p_tax_pct, deleted_at: null, source: 'web' });
+        db.orders.push({ id, org_id: body.p_org, number, customer_id: cust.id, date: '2026-11-08', status: 'quote', discount: 0, tax_pct: body.p_tax_pct, deleted_at: null, source: 'web', artwork: body.p_artwork ?? {}, notes: body.p_notes });
         (body.p_items as Row[]).forEach((it, i) => db.order_items.push({ id: `${id}-i${i}`, order_id: id, position: i, ...it, deleted_at: null }));
         return ok({ id, number });
       }
@@ -139,6 +146,39 @@ describe('buy a custom box', () => {
     expect(out.amount).toBe(812387);
     expect(rpcCalls.find((c) => c.fn === 'buyer_link')!.auth).toBe('Bearer buyer'); // linked as the buyer, not with the service key
     expect(rpcCalls.find((c) => c.fn === 'web_create_order')!.args).toMatchObject({ p_org: ORG, p_user: 'u-buyer', p_tax_pct: 5 });
+  });
+
+  // A 1×1 PNG, as the browser would send it.
+  const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const design = { ink: '#c62828', elements: [{ id: 'l', kind: 'logo', x: 0.3, y: 0.5, w: 0.4, ratio: 1 }, { id: 't', kind: 'text', text: 'Honey Packers', x: 0.7, y: 0.5, size: 0.12 }] };
+
+  it('stores the print design with the order and the logo + preview in the private bucket', async () => {
+    const r = await shop().checkoutCustom(post('buyer', { ...box, colours: undefined, print: 'one', artwork: { design, logo: PNG, preview: PNG } }));
+    expect(r.status, JSON.stringify(await r.clone().json())).toBe(200);
+    const made = db.orders.at(-1)!;
+    const art = made.artwork as Row & { elements: Row[] };
+    expect(art).toMatchObject({ print: 'one', colours: 1, ink: '#c62828', box: { length: 300, width: 200, height: 150 } });
+    expect(art.elements[1]).toMatchObject({ text: 'Honey Packers', color: '#c62828' });
+    expect(String(art.logo)).toMatch(/^org-1\/artwork\/[0-9a-f-]{36}\/logo\.png$/);
+    expect(Object.keys(files).sort()).toEqual([art.logo, art.preview].sort());
+    expect(Object.values(files).every((f) => f.auth === 'Bearer service' && f.type === 'image/png')).toBe(true);
+    expect(db.order_items.find((i) => i.order_id === made.id)!.description).toMatch(/1 colour print, artwork attached/);
+  });
+
+  it('prices multicolour at the most colours the price list allows', async () => {
+    await shop().checkoutCustom(post('buyer', { ...box, colours: undefined, print: 'multi' }));
+    const made = db.orders.at(-1)!;
+    expect(db.order_items.find((i) => i.order_id === made.id)!.description).toMatch(/multicolour print \(up to 4 colours\)/);
+    expect(made.notes).toMatch(/artwork to be sent/);
+    expect(made.artwork).toEqual({});
+  });
+
+  it('refuses files that are not pictures, and a logo without its file', async () => {
+    const msg = async (artwork: object) => (await (await shop().checkoutCustom(post('buyer', { ...box, print: 'one', artwork }))).json()).error;
+    expect(await msg({ design, logo: 'data:image/svg+xml;base64,PHN2Zz4=' })).toMatch(/PNG, JPG or WebP/);
+    expect(await msg({ design, logo: 'data:image/png;base64,AAAA' })).toMatch(/not a valid picture/);
+    expect(await msg({ design })).toMatch(/logo picture again/);
+    expect(Object.keys(files)).toHaveLength(0);
   });
 
   it('turns away what cannot be sold online', async () => {
