@@ -15,7 +15,7 @@ clone() { # url dir ref
   git clone --depth 1 ${ref:+--branch "$ref"} "$url" "$dir"
 }
 clone https://github.com/yuvarajeshsp-cloud/rajesh-hub.git ../rajesh-hub "${HUB_REF:-}"
-clone https://github.com/yuvarajeshsp-cloud/BoxBook.git ../BoxBook "${BOXBOOK_REF:-}"
+clone https://github.com/honeypackerspdkt/BoxBook.git ../BoxBook "${BOXBOOK_REF:-}"
 
 npm ci || npm install
 npm test
