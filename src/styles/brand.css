@@ -20,6 +20,20 @@
   --sale: #b42318;
   --shadow: 0 6px 24px color-mix(in oklab, var(--ink) 9%, transparent);
   --shadow-lift: 0 14px 40px color-mix(in oklab, var(--ink) 16%, transparent);
+
+  /* Home page night scene + the cardboard of the 3D carton (cardboard stays kraft whatever the brand colour). */
+  --night: #0f1b2b;
+  --night-2: #1c3249;
+  --night-line: color-mix(in oklab, white 12%, transparent);
+  --night-ink: #f3f6f9;
+  --night-muted: #b3c2cf;
+  --night-accent: color-mix(in oklab, var(--brand) 28%, white);
+  --carton-hi: #f2d4a6;
+  --carton: #d2a06b;
+  --carton-lo: #a6703f;
+  --carton-dark: #865630;
+  --carton-ink: #5e3a20;
+  --carton-tape: #f4e3c4;
 }
 
 /* (header styles: see the storefront section at the end) */
@@ -173,7 +187,7 @@
 .shop-header { position: sticky; top: 0; z-index: 40; background: color-mix(in oklab, var(--surface) 94%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
 .shop-header__bar { display: flex; align-items: center; gap: 14px; min-height: 68px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-family: var(--font-head); font-weight: 700; font-size: 1.25rem; white-space: nowrap; }
-.brand img { width: 34px; height: 34px; }
+.brand img { width: auto; height: 46px; }
 .search { display: flex; align-items: center; gap: 8px; background: var(--lavender-50); border: 1px solid var(--border); border-radius: 999px; padding: 0 14px; color: var(--ink-soft); }
 .search input { border: 0; background: transparent; font: inherit; color: var(--ink); min-height: 42px; width: 100%; outline: none; }
 .search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--lavender); }
@@ -200,6 +214,7 @@
   .menu__panel a:hover, .menu__panel a[aria-current='page'] { background: var(--lavender); }
   .search--menu { margin-bottom: 6px; }
   .brand { font-size: 1.1rem; }
+  .brand img { height: 38px; }
 }
 
 /* mini cart drawer */

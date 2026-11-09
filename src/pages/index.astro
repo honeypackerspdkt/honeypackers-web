@@ -1,80 +1,107 @@
 ---
 import Base from '../layouts/Base.astro';
+import EnquiryForm from '../components/EnquiryForm.astro';
 import { BOX_W, BOX_H, boxSvgInner } from '../lib/box-svg';
 import { loadProducts } from '../lib/products';
 import { liveConfig } from '../lib/price-list';
 import { productTile } from '../lib/product-card';
 import { productHref } from '../lib/catalog';
-import { icon } from '../lib/icons';
 import { site, waHref } from '../site';
+import '../styles/home.css';
 
-const heroBox = { length: 400, width: 300, height: 250 };
 const { products } = await loadProducts(liveConfig());
 const built = new Set(products.map((p) => p.slug));
 const featured = products.slice(0, 4);
+const words = site.name.toUpperCase().split(/\s+/);
 
-const cats = [
-  { href: '/shop/?ply=3', title: '3 ply boxes', text: 'Light goods, retail and e-commerce parcels', icon: icon.box(28) },
-  { href: '/shop/?ply=5', title: '5 ply boxes', text: 'Heavier goods and warehouse stacking', icon: icon.layers(28) },
-  { href: '/shop/?ply=7', title: '7 ply boxes', text: 'Heavy, fragile and export loads', icon: icon.shield(28) },
-  { href: '/custom-box/', title: 'Custom size & print', text: 'Your size, your logo, priced instantly', icon: icon.print(28) },
+const range = [
+  { n: '01 / 03', tag: 'Everyday essential', title: 'Corrugated cartons', text: 'Reliable, well-fitted protection from warehouse to doorstep. Ready sizes in packs.', cta: 'Shop ready sizes', href: '/shop/', dims: { length: 400, width: 300, height: 250 }, yaw: -0.62 },
+  { n: '02 / 03', tag: 'A better unboxing', title: 'Die-cut & mailers', text: 'Smarter folds and neat mailer boxes for products that ship to customers.', cta: 'Ask for a quote', href: '#configure', style: 'diecut', dims: { length: 320, width: 240, height: 90 }, yaw: -0.85 },
+  { n: '03 / 03', tag: 'Your brand, front & centre', title: 'Printed packaging', text: 'Your logo in up to four colours. Priced instantly with the plate cost included.', cta: 'Price a printed box', href: '#configure', print: '1', dims: { length: 300, width: 300, height: 300 }, yaw: -0.5 },
+];
+
+const steps = [
+  { t: 'Tell us your size', p: 'Enter the inside size, board and printing in the box builder, or pick a ready size.' },
+  { t: 'See the price', p: 'The price per box, strength and weight show instantly. Or send it to us for a quote.' },
+  { t: 'Approve and pay', p: 'Pay online by UPI, card or net banking and get a GST invoice.' },
+  { t: 'Delivered to you', p: 'Our vehicle or courier brings the boxes, ready for your packing line.' },
 ];
 
 const faqs = [
-  { q: 'What is the minimum order?', a: 'The box price page shows the minimum quantity for online prices. For smaller quantities, send an enquiry and we will tell you what we can do.' },
+  { q: 'What is the minimum order?', a: 'The box builder shows the minimum quantity for online prices. For smaller quantities, send an enquiry and we will tell you what we can do.' },
   { q: 'Which size should I give you?', a: 'Give the inside size in millimetres: length and width of the opening, then the height. Allow a few mm around your product for packing.' },
   { q: 'How do I choose 3, 5 or 7 ply?', a: 'Light goods up to a few kg usually travel well in 3 ply. Heavier goods, stacking in warehouses or long transport need 5 ply. Very heavy or export loads need 7 ply. The price page shows the bursting strength (BS) of every option.' },
   { q: 'Is GST included?', a: 'Prices are shown before GST. Corrugated boxes carry 5% GST (HSN 4819), added on the invoice. Give your GSTIN and you can claim input tax credit.' },
-  { q: 'Can you print our logo?', a: 'Yes, up to 4 colours. Choose the number of colours on the price page; the plate cost is already included in the price.' },
+  { q: 'Can you print our logo?', a: 'Yes, up to 4 colours. Choose the number of colours in the box builder; the plate cost is already included in the price.' },
 ];
 ---
 
 <Base
-  title={`${site.name}: buy corrugated boxes online`}
-  description="Shop 3, 5 and 7 ply corrugated boxes in packs, or price any custom size and printing instantly. Strength (BS) shown, GST invoice, secure online payment."
+  title={`${site.name}: corrugated boxes, ready sizes and made to measure`}
+  description="Shop 3, 5 and 7 ply corrugated boxes in packs, or build any custom size and printing and see the price instantly. Strength (BS) shown, GST invoice, secure online payment."
   jsonLd={{ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) }}
 >
-  <section class="hero2">
-    <div class="container hero__grid">
-      <div>
-        <span class="hero__eyebrow">Corrugated box manufacturer</span>
-        <h1>Boxes ready to ship, or made to your size.</h1>
-        <p class="hero__lead">Order ready sizes in packs, or enter any size and see the price, strength and weight in seconds. Pay online and get a GST invoice.</p>
-        <div class="btn-row" style="margin-top:22px">
-          <a class="btn btn--primary" href="/shop/">Shop boxes</a>
-          <a class="btn btn--ghost" href="/custom-box/">Get a custom size</a>
+  <section class="hx" data-hx aria-labelledby="hx-title">
+    <div class="hx__sticky">
+      <div class="hx__grid"></div>
+      <div class="hx__word" aria-hidden="true" data-hx-word>{words[0]}</div>
+      <div class="hx__meta"><span>{site.name} / box manufacturing</span><span>Designed with purpose. Built for delivery.</span></div>
+      <div class="hx__stage" aria-hidden="true" data-hx-stage>
+        <div class="hx__orbit"></div>
+        <div class="hx__shadow"></div>
+        <div class="cbox" data-hx-box>
+          <div class="f-back"></div><div class="f-bottom"></div><div class="f-left"></div><div class="f-right"></div>
+          <div class="f-front"><span class="mark">{words.map((w, i) => <>{i > 0 && <br />}{w}</>)}<small>Precision in every fold</small></span><span class="code"></span></div>
+          <div class="f-top"><div class="flap flap--a"></div><div class="flap flap--b"></div></div>
         </div>
-        <ul class="hero__points" style="margin-top:22px">
-          <li><Fragment set:html={icon.check(18)} />3, 5 and 7 ply, plain or printed</li>
-          <li><Fragment set:html={icon.check(18)} />Bursting strength (BS) shown for every box</li>
-          <li><Fragment set:html={icon.check(18)} />UPI, cards and net banking</li>
-        </ul>
       </div>
-      <a class="hero__visual box3d" href="/custom-box/" aria-label="Price a custom box">
-        <svg viewBox={`0 0 ${BOX_W} ${BOX_H}`} aria-hidden="true" set:html={boxSvgInner(heroBox, { yaw: -0.62, pitch: 0.5 })} />
-      </a>
+      <div class="hx__slides">
+        <article class="hx__slide" data-slide>
+          <div class="hx-k"><i></i>A better way to package</div>
+          <h1 class="hx-h" id="hx-title">Ordinary boxes.<br /><em>Extraordinary</em> thinking.</h1>
+          <p>Corrugated cartons that do more than protect. Ready sizes in packs, or any size made to measure and priced in seconds.</p>
+          <div class="hx__acts">
+            <a class="hx-btn" href="/shop/">Shop boxes <b aria-hidden="true">↗</b></a>
+            <a class="hx-link" href="#configure">Build your box ↗</a>
+          </div>
+        </article>
+        <article class="hx__slide hx__slide--r" data-slide>
+          <div class="hx-k"><i></i>Measured. Protected. Delivered.</div>
+          <h2 class="hx-h">Precision,<br /><em>inside out.</em></h2>
+          <p>Perfect-fit sizes and the right board for the load. Every box shows its bursting strength (BS) before you buy.</p>
+          <div class="hx__facts"><span>Made to measure</span><span>3 / 5 / 7 ply</span></div>
+        </article>
+        <article class="hx__slide" data-slide>
+          <div class="hx-k"><i></i>The first impression matters</div>
+          <h2 class="hx-h">Make the<br />arrival <em>matter.</em></h2>
+          <p>From clean kraft to boxes printed with your logo. Let your box make an impression long before it is opened.</p>
+          <div class="hx__acts">
+            <a class="hx-btn" href="#configure">Price your box <b aria-hidden="true">↗</b></a>
+            <a class="hx-link" href="#quote">Request a quote ↗</a>
+          </div>
+        </article>
+      </div>
+      <div class="hx__bottom" aria-hidden="true">
+        <div class="hx__cue"><span class="hx__mouse"></span><span>Scroll to discover</span></div>
+        <div class="hx__idx"><b data-hx-idx>01 / 03</b> &nbsp; <span data-hx-cap>Designed to impress</span></div>
+      </div>
+      <div class="hx__bar"><div data-hx-bar></div></div>
     </div>
   </section>
 
-  <section class="section" style="padding-bottom:0">
-    <div class="container">
-      <div class="cats">
-        {cats.map((c) => (
-          <a class="cat" href={c.href}>
-            <Fragment set:html={c.icon} />
-            <strong>{c.title}</strong>
-            <span>{c.text}</span>
-          </a>
-        ))}
-      </div>
+  <div class="caps">
+    <div class="container caps__in">
+      <div><span>01</span><strong>Made to measure</strong><small>Any size, priced instantly</small></div>
+      <div><span>02</span><strong>Built for strength</strong><small>3 / 5 / 7 ply, BS shown</small></div>
+      <div><span>03</span><strong>Branded your way</strong><small>Printing up to 4 colours</small></div>
     </div>
-  </section>
+  </div>
 
   {featured.length > 0 && (
     <section class="section" data-featured data-built={JSON.stringify([...built])}>
       <div class="container">
-        <div class="section-head">
-          <h2>Ready to order</h2>
+        <div class="hs reveal">
+          <div><div class="hx-k"><i></i>Ready to order</div><h2 class="hx-h">Boxes in stock, <em>in packs.</em></h2></div>
           <a href="/shop/">View all boxes →</a>
         </div>
         <div class="tiles" data-tiles set:html={featured.map((p) => productTile(p, productHref(p, built))).join('')} />
@@ -82,21 +109,121 @@ const faqs = [
     </section>
   )}
 
+  <section class="section section--tint" id="products">
+    <div class="container">
+      <div class="hs reveal">
+        <div><div class="hx-k"><i></i>Our range</div><h2 class="hx-h">A box for<br /><em>every possibility.</em></h2></div>
+        <p>From simple shipping cartons to standout branded packaging, built around your product and your process.</p>
+      </div>
+      <div class="range">
+        {range.map((r) => (
+          <a class="range__card reveal" href={r.href} data-style={r.style} data-print={r.print}>
+            <div class="range__img box3d"><span>{r.n}</span><svg viewBox={`0 0 ${BOX_W} ${BOX_H}`} aria-hidden="true" set:html={boxSvgInner(r.dims, { yaw: r.yaw, pitch: 0.48 }, false)} /></div>
+            <div class="range__body"><small>{r.tag}</small><h3>{r.title}</h3><p>{r.text}</p><b>{r.cta} ↗</b></div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="configure">
+    <div class="container">
+      <div class="hs reveal">
+        <div><div class="hx-k"><i></i>Make it yours</div><h2 class="hx-h">Your box.<br /><em>Your size.</em></h2></div>
+        <p>Enter the inside size, choose the board and printing, and see the price per box. Order online or send it to us for a quote.</p>
+      </div>
+      <div class="bb" data-bb>
+        <form class="bb__form" data-bb-form onsubmit="return false">
+          <div class="bb__head"><span>Custom box builder</span><span data-bb-status>Loading prices…</span></div>
+          <div class="bb__q">
+            <label for="bb-style"><span><span class="bb__n">01</span>Box style</span></label>
+            <select class="input" id="bb-style" name="style">
+              <option value="rsc">Regular slotted carton (RSC)</option>
+              <option value="diecut">Die-cut mailer box</option>
+              <option value="other">Other / not sure</option>
+            </select>
+          </div>
+          <div class="bb__q">
+            <div class="bb__lab"><span><span class="bb__n">02</span>Inside size (L × W × H)</span>
+              <span class="bb__unit" role="group" aria-label="Unit"><button type="button" data-unit="mm" aria-pressed="true">mm</button><button type="button" data-unit="in" aria-pressed="false">inch</button></span>
+            </div>
+            <div class="bb__dims">
+              <label><small>Length</small><input name="l" inputmode="decimal" value="300" aria-label="Length" /></label><span class="bb__x">×</span>
+              <label><small>Width</small><input name="w" inputmode="decimal" value="200" aria-label="Width" /></label><span class="bb__x">×</span>
+              <label><small>Height</small><input name="h" inputmode="decimal" value="150" aria-label="Height" /></label>
+            </div>
+            <p class="bb__help">Inside size of the box. Allow a few mm around your product.</p>
+          </div>
+          <div class="bb__q">
+            <div class="bb__lab"><span><span class="bb__n">03</span>Board strength</span></div>
+            <div class="bb__chips" role="group" aria-label="Ply">
+              <button type="button" data-ply="3" aria-pressed="false">3 PLY</button>
+              <button type="button" data-ply="5" aria-pressed="true">5 PLY</button>
+              <button type="button" data-ply="7" aria-pressed="false">7 PLY</button>
+            </div>
+            <select class="input" name="grade" aria-label="Board grade" data-bb-grade></select>
+          </div>
+          <div class="bb__q">
+            <label for="bb-print"><span><span class="bb__n">04</span>Printing</span></label>
+            <select class="input" id="bb-print" name="colours" data-bb-print>
+              <option value="0">Plain, no printing</option>
+            </select>
+          </div>
+          <div class="bb__q">
+            <label for="bb-qty"><span><span class="bb__n">05</span>Quantity (boxes)</span></label>
+            <div class="bb__qty"><button type="button" data-qty="-1" aria-label="100 fewer">−</button><input id="bb-qty" name="qty" inputmode="numeric" value="500" /><button type="button" data-qty="1" aria-label="100 more">+</button></div>
+          </div>
+        </form>
+        <div class="bb__view">
+          <figure class="bb__stage" aria-hidden="true" style="margin:0">
+            <div class="cbox" data-bb-box>
+              <div class="f-back"></div><div class="f-bottom"></div><div class="f-left"></div><div class="f-right"></div>
+              <div class="f-front"><span class="mark">{words.map((w, i) => <>{i > 0 && <br />}{w}</>)}</span><span class="code"></span></div>
+              <div class="f-top"><div class="flap flap--a"></div><div class="flap flap--b"></div></div>
+            </div>
+            <figcaption>LIVE PREVIEW</figcaption>
+          </figure>
+          <div class="bb__sum">
+            <div><span>Size</span><strong data-bb-dim>300 × 200 × 150 mm</strong></div>
+            <div><span>Board</span><strong data-bb-board>5 ply</strong></div>
+            <div><span>Quantity</span><strong data-bb-qty>500 boxes</strong></div>
+          </div>
+          <div aria-live="polite">
+            <div class="bb__price"><strong data-bb-price>…</strong><span data-bb-per></span></div>
+            <p class="small muted" data-bb-note style="margin:6px 0 0"></p>
+          </div>
+          <div class="bb__acts">
+            <a class="btn btn--primary" href="/custom-box/" data-bb-order>Order &amp; pay online</a>
+            <a class="btn btn--ghost" href="#quote" data-bb-quote>Request a quote</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="section section--tint">
     <div class="container">
-      <div class="custom-band">
-        <div>
-          <h2>Any size, priced in seconds</h2>
-          <p class="muted">Enter the inside length, width and height, choose the board and printing, and see the price per box, how much you save on bigger orders, the strength and the weight. Order and pay online.</p>
-          <ol class="steps" style="grid-template-columns:1fr;gap:10px;margin:16px 0 20px">
-            <li style="padding:14px"><h3 style="font-size:1rem">Enter your size</h3></li>
-            <li style="padding:14px"><h3 style="font-size:1rem">Pick board and printing</h3></li>
-            <li style="padding:14px"><h3 style="font-size:1rem">See the price and pay</h3></li>
-          </ol>
-          <a class="btn btn--primary" href="/custom-box/">Price your custom box</a>
-        </div>
-        <div class="box3d"><svg viewBox={`0 0 ${BOX_W} ${BOX_H}`} aria-hidden="true" set:html={boxSvgInner({ length: 300, width: 200, height: 150 }, { yaw: -0.9, pitch: 0.45 })} /></div>
+      <div class="hs reveal">
+        <div><div class="hx-k"><i></i>Simple by design</div><h2 class="hx-h">From size<br /><em>to doorstep.</em></h2></div>
       </div>
+      <ol class="proc reveal">
+        {steps.map((s) => <li><h3>{s.t}</h3><p>{s.p}</p></li>)}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section hq" id="quote">
+    <div class="container hq__in">
+      <div>
+        <div class="hx-k"><i></i>Let’s get started</div>
+        <h2 class="hx-h">Good things come in <em>great boxes.</em></h2>
+        <p>Have a box in mind, a bulk order or printing? Send us your requirements and we’ll get back to you with a quote.</p>
+        <div class="hq__ways">
+          {site.whatsapp && <a class="hx-btn" href={waHref(site.whatsapp, `Hi ${site.name}, I'd like a quote for boxes.`)} data-wa="home-quote">WhatsApp us <b aria-hidden="true">↗</b></a>}
+          {site.phone && <a class="hx-link" href={`tel:${site.phone.replace(/[^\d+]/g, '')}`}>Call {site.phone}</a>}
+        </div>
+      </div>
+      <EnquiryForm subject="Quote from the home page box builder" />
     </div>
   </section>
 
@@ -112,16 +239,6 @@ const faqs = [
 </Base>
 
 <script>
-  import { catalog, productHref } from '../lib/catalog';
-  import { productTile } from '../lib/product-card';
-  import { wireTiles } from '../lib/add-to-cart';
-  const box = document.querySelector<HTMLElement>('[data-featured]');
-  if (box) {
-    const tiles = box.querySelector<HTMLElement>('[data-tiles]')!;
-    const built = new Set<string>(JSON.parse(box.dataset.built || '[]'));
-    wireTiles(tiles);
-    void catalog().then((r) => {
-      if (r.source === 'live') tiles.innerHTML = r.products.slice(0, 4).map((p) => productTile(p, productHref(p, built))).join('');
-    });
-  }
+  import { initHome } from '../scripts/home';
+  initHome();
 </script>

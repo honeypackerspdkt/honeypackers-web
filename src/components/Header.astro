@@ -24,9 +24,8 @@ const q = Astro.url.searchParams?.get?.('q') ?? '';
         <a href="/account/" aria-current={current('/account/')}>My orders</a>
       </nav>
     </details>
-    <a class="brand" href="/">
-      <img src="/favicon.svg" alt="" width="34" height="34" />
-      <span>{site.name}</span>
+    <a class="brand" href="/" aria-label={`${site.name} home`}>
+      <img src="/honey-packers-logo-header.webp" alt={site.name} width="274" height="120" decoding="async" />
     </a>
     <form action="/shop/" method="get" role="search" class="search search--bar">
       <Fragment set:html={icon.search(18)} />

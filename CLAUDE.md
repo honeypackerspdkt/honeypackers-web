@@ -7,7 +7,11 @@ Overall plan: BoxBook repo `docs/online-business-plan.md`. App + database + shar
 - Always ask questions as selectable choices (AskUserQuestion), never as open-ended text questions.
 
 ## Layout
-- Storefront (redesign): `src/pages`: `index` (shop home), `shop` (grid + filters/sort/search), `products/[slug]` (static product pages) +
+- Home (`index`, the owner's cinematic design): night hero where a CSS 3D carton turns and opens on scroll (`scripts/home.ts`,
+  `styles/home.css`, colours from `--night*` / `--carton*` tokens in `brand.css`), ready-to-order tiles, range cards, box builder
+  (`lib/box-builder.ts`: real price via box-core `priceCustomBox`, order link to `/custom-box/`, enquiry text), process, quote (`EnquiryForm`).
+  Logo `public/honey-packers-logo-header.webp` (cropped from `honey-packers-logo-precision.webp`), PNG icons, `site.webmanifest`, OG image.
+- Storefront: `src/pages`: `index` (home), `shop` (grid + filters/sort/search), `products/[slug]` (static product pages) +
   `product/` (any product by `?p=`), `checkout` (one page: boxes, delivery, inline SMS sign-in + details, pay), `custom-box`, `account`,
   `box-strength-calculator`, `contact`, `thanks`, `privacy`, `404`. `public/_redirects`: `/cart/` → `/checkout/`, `/products/` → `/shop/`.
 - Shared UI: `components/Header.astro` (promo strip, search, menu, account, cart badge), `components/CartDrawer.astro` (<dialog> mini cart),

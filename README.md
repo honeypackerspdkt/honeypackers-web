@@ -6,7 +6,7 @@ Astro static site on Netlify, started from `rajesh-hub/templates/site`. Prices c
 ## Pages (storefront)
 | Page | What |
 |---|---|
-| `/` | Shop home: hero (Shop boxes / Get a custom size), categories (3/5/7 ply, custom & print), ready-to-order packs, custom-size band, FAQ |
+| `/` | Home: animated night hero (a carton that turns and opens as you scroll), ready-to-order packs, range, box builder with the live price (order online or request a quote), how it works, quote form, FAQ |
 | `/shop/` | All standard boxes: filter by ply, sort (price, size), search (also from the header search box: `/shop/?q=…`) |
 | `/products/<slug>/` | Product page (one per product at build time, with Google product data): 3D box, pack picker, quantity, Add to cart / Buy now, delivery check by pincode, specifications |
 | `/product/?p=<slug>` | Same page for products added after the last build |
