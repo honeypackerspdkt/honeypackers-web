@@ -49,6 +49,9 @@ Overall plan: `admin/docs/online-business-plan.md`. Site, admin (`admin/`), data
   (`cd admin && npm test`, `npx tsc -b`). Built into `dist/admin/` by `scripts/build-admin.sh` (run by `netlify-build.sh`;
   `VITE_SUPABASE_*` default to the site's `PUBLIC_SUPABASE_*`, `VITE_SHOP_URL` to Netlify's `URL`). Served at `/admin/`, noindex.
   Database schema for Honey Packers: `admin/supabase/migrations` (applied to the honeypackerspdkt project). Its notes: `admin/docs`.
+  Sign-in only: `admin/src/AdminGate.tsx` shows nothing of the app until a member of the business is signed in (e-mail link/code
+  or SMS); non-members see "No access" (owner invites under More → Staff). Migration 10 lets the database hold one business only,
+  so after the owner's first set-up nobody else can create one. What a member may change is decided by role (`lib/roles.ts`).
 - Box maths: `packages/box-core` (`@honeypackers/box-core`, linked `file:./packages/box-core`; the admin links `file:../packages/box-core`).
   Its tests run with the site's `npm test` (vitest.config.ts).
   Supabase project "honeypackerspdkt's Project" (ref `gvsjdrsydgbkdxrgmlmb`, Mumbai, org honeypackerspdkt) holds the migrations 01–09 in `admin/supabase/migrations` (the earlier `wungbckyjamjwbxrfkle` project in Paavai-Embroidery is no longer used).

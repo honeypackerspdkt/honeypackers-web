@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Box, Check, ClipboardList, Copy, Download, FileText, Globe, Link2, MessageCircle, Pencil, Phone, Plus, Share2, Smartphone, Trash2, UserPlus, Wallet, X } from 'lucide-react';
 import { artworkSummary } from '@honeypackers/box-core/artwork';
-import { cloudConfigured } from '../lib/cloud/supabase-api';
+import { cloudConfigured } from '../lib/cloud/config';
 import { usePerms, useStore } from '../store';
 import { canMoveStatus } from '../lib/roles';
 import { useNav } from '../nav';

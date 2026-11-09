@@ -21,6 +21,7 @@ import { ProductEdit, ProductsList } from './screens/Products';
 import { Help } from './screens/Help';
 import { Backup } from './screens/Backup';
 import { DesktopNav } from './DesktopNav';
+import { AdminGate } from './AdminGate';
 
 const TABS: (BottomNavItem & { key: Tab })[] = [
   { key: 'home', label: 'Home', icon: HomeIcon },
@@ -99,7 +100,7 @@ function renderTab(t: Tab) {
 }
 
 function Shell() {
-  const { ready, data, toastMsg } = useStore();
+  const { ready, data, toastMsg, cloudStatus } = useStore();
   const { role } = usePerms();
   const allowed = tabsFor(role);
   useEffect(() => {
@@ -117,6 +118,16 @@ function Shell() {
       <div className="grid h-full place-items-center">
         <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-border border-t-primary" role="status" aria-label="Loading" />
       </div>
+    );
+  }
+
+  // Honey Packers admin: sign-in only (see AdminGate).
+  if (cloudStatus.phase !== 'ready') {
+    return (
+      <>
+        <AdminGate />
+        <Toaster position="top-center" theme={data.settings.theme} />
+      </>
     );
   }
 
@@ -139,7 +150,7 @@ function Shell() {
 function BrandBoundary() {
   const { data } = useStore();
   return (
-    <BrandProvider value={{ companyName: data.settings.businessName || 'BoxBook', companyLogo: null }}>
+    <BrandProvider value={{ companyName: data.settings.businessName || 'Honey Packers', companyLogo: null }}>
       <Shell />
     </BrandProvider>
   );

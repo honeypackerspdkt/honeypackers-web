@@ -51,9 +51,9 @@ export function CloudSync() {
   );
 }
 
-const counts = (d: { customers: unknown[]; orders: unknown[]; boxes: unknown[] }) => `${d.customers.length} customers, ${d.orders.length} orders, ${d.boxes.length} saved boxes`;
+export const counts = (d: { customers: unknown[]; orders: unknown[]; boxes: unknown[] }) => `${d.customers.length} customers, ${d.orders.length} orders, ${d.boxes.length} saved boxes`;
 
-type Run = (fn: () => Promise<void>, ok?: string) => Promise<void>;
+export type Run = (fn: () => Promise<void>, ok?: string) => Promise<void>;
 
 function NotSetUp() {
   return (
@@ -69,9 +69,9 @@ function NotSetUp() {
   );
 }
 
-function SignIn({ run, busy }: { run: Run; busy: boolean }) {
+export function SignIn({ run, busy }: { run: Run; busy: boolean }) {
   const { cloud } = useStore();
-  const [by, setBy] = useState<'mobile' | 'email'>('mobile');
+  const [by, setBy] = useState<'mobile' | 'email'>('email');
   const [mobile, setMobile] = useState('');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -129,7 +129,7 @@ function SignIn({ run, busy }: { run: Run; busy: boolean }) {
   );
 }
 
-function CreateBusiness({ run, busy, defaultName, counts }: { run: Run; busy: boolean; defaultName: string; counts: string }) {
+export function CreateBusiness({ run, busy, defaultName, counts }: { run: Run; busy: boolean; defaultName: string; counts: string }) {
   const { cloud } = useStore();
   const [name, setName] = useState(defaultName);
   const [you, setYou] = useState('');
@@ -154,7 +154,7 @@ function CreateBusiness({ run, busy, defaultName, counts }: { run: Run; busy: bo
   );
 }
 
-function Invitation({ run, busy, orgName, role }: { run: Run; busy: boolean; orgName: string; role: string }) {
+export function Invitation({ run, busy, orgName, role }: { run: Run; busy: boolean; orgName: string; role: string }) {
   const { cloud } = useStore();
   const [you, setYou] = useState('');
   return (
@@ -174,7 +174,7 @@ function Invitation({ run, busy, orgName, role }: { run: Run; busy: boolean; org
   );
 }
 
-function Join({ run, busy, counts }: { run: Run; busy: boolean; counts: string }) {
+export function Join({ run, busy, counts }: { run: Run; busy: boolean; counts: string }) {
   const { cloud, cloudStatus: st } = useStore();
   const empty = counts.startsWith('0 customers, 0 orders, 0');
   return (
@@ -247,7 +247,7 @@ const short = (v: unknown) => {
   return s.length > 60 ? s.slice(0, 57) + '…' : s;
 };
 
-function SignOutButton({ show, run, busy, pending }: { show: boolean; run: Run; busy: boolean; pending: number }) {
+export function SignOutButton({ show, run, busy, pending }: { show: boolean; run: Run; busy: boolean; pending: number }) {
   const { cloud } = useStore();
   const [ask, setAsk] = useState(false);
   if (!show) return null;

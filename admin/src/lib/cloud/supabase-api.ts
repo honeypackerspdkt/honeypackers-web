@@ -102,6 +102,13 @@ export async function myProfile(): Promise<Profile | null> {
   return { orgId: data.organization_id, orgName: org?.name || '', role: data.role, name: data.display_name };
 }
 
+/** Whether this database already has its business (the website's public company details; readable before sign-in). */
+export async function businessExists(): Promise<boolean> {
+  const { data, error } = await getClient().from('public_business').select('org_id').limit(1);
+  if (error) fail(error);
+  return (data || []).length > 0;
+}
+
 export async function createOrganization(name: string, displayName: string): Promise<string> {
   const { data, error } = await getClient().rpc('create_organization', { p_name: name, p_display_name: displayName });
   if (error) fail(error);
