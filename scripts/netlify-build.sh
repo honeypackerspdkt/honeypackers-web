@@ -20,5 +20,3 @@ clone https://github.com/honeypackerspdkt/BoxBook.git ../BoxBook "${BOXBOOK_REF:
 npm ci || npm install
 npm test
 npm run build
-# The BoxBook admin app at /admin/ (same Supabase project as the shop).
-bash scripts/build-admin.sh

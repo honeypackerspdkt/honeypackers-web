@@ -44,8 +44,8 @@ Overall plan: BoxBook repo `docs/online-business-plan.md`. App + database + shar
   passes `p_artwork` to `web_create_order` (orders.artwork). Links use `?p=plain|one|multi` (old `?c=n` still read).
 - Enquiries: Netlify Forms + `netlify/functions/submission-created.mts` (`netlify/lib/enquiry.ts`) → Supabase `enquiries` → BoxBook Inbox.
 - `src/site.ts`: business details from `PUBLIC_*` env vars, nav. `src/styles/brand.css`: brand colours (override hub token variables only) + site components.
-- Admin: the BoxBook app is built into `dist/admin/` by `scripts/build-admin.sh` (run by `netlify-build.sh` after the site build;
-  `VITE_SUPABASE_*` default to the site's `PUBLIC_SUPABASE_*`, `VITE_SHOP_URL` to Netlify's `URL`). Served at `/admin/`, noindex.
+- BoxBook (the admin app) is deployed and configured on its own (owner's choice, 9 Nov 2026); this site no longer builds it.
+  The site still needs the BoxBook repo for `packages/box-core` (prices, artwork, 3D box).
   Supabase project "honeypackerspdkt's Project" (ref `gvsjdrsydgbkdxrgmlmb`, Mumbai, org honeypackerspdkt) holds BoxBook's migrations 01–09 (the earlier `wungbckyjamjwbxrfkle` project in Paavai-Embroidery is no longer used).
 - Linked deps (`file:`): `../rajesh-hub/packages/{tokens,web-growth}`, `../BoxBook/packages/box-core`. Netlify clones them (`scripts/netlify-build.sh`).
 
