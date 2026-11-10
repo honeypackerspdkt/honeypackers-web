@@ -54,7 +54,7 @@ export async function verifyCode(email: string, code: string) {
 /** Indian mobile number (10 digits, any spaces / +91) → E.164 for Supabase. */
 export const e164 = (mobile: string) => `+91${mobile.replace(/\D/g, '').slice(-10)}`;
 
-/** SMS code to a mobile number (sent through MSG91 by the send-sms-msg91 hook). */
+/** Code to a mobile number, delivered on WhatsApp by the send-otp-whatsapp hook (Supabase's Send SMS hook). */
 export async function sendPhoneCode(mobile: string) {
   const { error } = await getClient().auth.signInWithOtp({ phone: e164(mobile), options: { shouldCreateUser: true } });
   if (error) fail(error);

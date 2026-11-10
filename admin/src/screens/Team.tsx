@@ -195,7 +195,7 @@ function InviteSheet({ open, onClose, onDone }: { open: boolean; onClose: () => 
   return (
     <Sheet open={open} onClose={onClose} title="Invite someone">
       <div className="space-y-4">
-        <Segmented<'mobile' | 'email'> value={by} onChange={setBy} options={[{ value: 'mobile', label: 'Mobile number' }, { value: 'email', label: 'E-mail' }]} />
+        <Segmented<'mobile' | 'email'> value={by} onChange={setBy} options={[{ value: 'mobile', label: 'WhatsApp number' }, { value: 'email', label: 'E-mail' }]} />
         {by === 'mobile' ? (
           <Field label="Mobile number">
             <div className="flex items-center gap-2">

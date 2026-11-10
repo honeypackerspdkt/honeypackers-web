@@ -2,8 +2,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { customerFromRow, ordersFromRows } from './account';
 
 /**
- * Buyer sign-in and data (Supabase). Mobile number + SMS code: Supabase creates the code and BoxBook's
- * send-sms-msg91 hook delivers it through MSG91. Row-level security limits a buyer to their own records.
+ * Buyer sign-in and data (Supabase). Mobile number + code on WhatsApp (Supabase creates the code; the
+ * send-otp-whatsapp hook delivers it through Meta's Cloud API), or e-mail + code/link (Supabase's mailer).
+ * Row-level security limits a buyer to their own records.
  */
 const env = import.meta.env;
 const url = (env.PUBLIC_SUPABASE_URL || '').trim();
@@ -22,19 +23,31 @@ const fail = (e: { message?: string } | null) => {
   throw new Error(e?.message || 'Something went wrong');
 };
 
-export async function sendCode(mobile10: string) {
-  const { error } = await (await sb()).auth.signInWithOtp({ phone: `+91${mobile10}`, options: { shouldCreateUser: true } });
+/** Where the sign-in code goes: WhatsApp to an Indian mobile number, or e-mail. */
+export type SignInTarget = { via: 'wa'; mobile: string } | { via: 'email'; email: string };
+
+export async function sendCode(t: SignInTarget) {
+  const auth = (await sb()).auth;
+  const { error } =
+    t.via === 'wa'
+      ? await auth.signInWithOtp({ phone: `+91${t.mobile}`, options: { shouldCreateUser: true } })
+      : // the e-mail carries a link back to this page and (with a custom mail sender) the 6-digit code
+        await auth.signInWithOtp({ email: t.email, options: { shouldCreateUser: true, emailRedirectTo: location.origin + location.pathname } });
   if (error) fail(error);
 }
 
-export async function verifyCode(mobile10: string, code: string) {
-  const { error } = await (await sb()).auth.verifyOtp({ phone: `+91${mobile10}`, token: code, type: 'sms' });
+export async function verifyCode(t: SignInTarget, code: string) {
+  const auth = (await sb()).auth;
+  const { error } = t.via === 'wa' ? await auth.verifyOtp({ phone: `+91${t.mobile}`, token: code, type: 'sms' }) : await auth.verifyOtp({ email: t.email, token: code, type: 'email' });
   if (error) fail(error);
 }
 
-export async function signedInPhone(): Promise<string | null> {
+/** Who is signed in: their mobile (+91…) and/or e-mail; null when signed out. */
+export async function signedIn(): Promise<{ phone: string; email: string } | null> {
   const { data } = await (await sb()).auth.getSession();
-  return data.session?.user?.phone ? `+${data.session.user.phone.replace(/^\+/, '')}` : null;
+  const u = data.session?.user;
+  if (!u) return null;
+  return { phone: u.phone ? `+${u.phone.replace(/^\+/, '')}` : '', email: u.email || '' };
 }
 
 /** Access token for our server functions (payments). */
@@ -54,6 +67,8 @@ export interface Profile {
   gstin?: string;
   address?: string;
   stateCode?: string;
+  /** Mobile number for delivery (buyers who signed in by e-mail). */
+  phone?: string;
 }
 
 /**
@@ -70,6 +85,7 @@ export async function link(p: Profile = {}) {
     p_gstin: p.gstin ?? null,
     p_address: p.address ?? null,
     p_state_code: p.stateCode ?? null,
+    p_phone: p.phone ?? null,
   });
   if (error) fail(error);
   const { data, error: e2 } = await c.from('customers').select('*').eq('id', id as string).single();

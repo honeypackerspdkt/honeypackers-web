@@ -208,6 +208,12 @@ h3 { letter-spacing: -0.02em; }
 .cart-line:last-child { border-bottom: 0; }
 .cart-line__qty { display: flex; align-items: center; gap: 8px; }
 .cart-line__qty button { min-height: 40px; min-width: 40px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); font: inherit; font-weight: 700; cursor: pointer; }
+/* sign-in: code on WhatsApp or by e-mail (components/SignInFields.astro) */
+.via { display: inline-flex; gap: 4px; margin: 0; padding: 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); justify-self: start; }
+.via__opt { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 16px; border-radius: 999px; font-weight: 600; cursor: pointer; }
+.via__opt input { accent-color: var(--brand); margin: 0; }
+.via__opt:has(input:checked) { background: var(--orange-50); color: var(--brand); }
+.via__opt:has(input:focus-visible) { outline: 3px solid var(--lavender); }
 .linkish { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
 
 /* ═════════════════════ storefront ═════════════════════ */

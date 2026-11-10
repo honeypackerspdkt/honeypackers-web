@@ -3,6 +3,8 @@ import type { Product } from '@honeypackers/box-core/types';
 import { catalog, priceList } from '../lib/catalog';
 import { readCart, writeCart } from '../lib/products';
 import { mobile10 } from '../lib/account';
+import { bindSignInForm, codeHint, targetLabel } from '../lib/signin-form';
+import type { SignInTarget } from '../lib/account-api';
 import { icon } from '../lib/icons';
 import { esc, rs } from '../lib/product-card';
 
@@ -14,7 +16,7 @@ const message = (e: unknown) => {
   return m;
 };
 
-/** One-page checkout: boxes → delivery → sign in by SMS + details → pay (server prices it again). */
+/** One-page checkout: boxes → delivery → sign in (WhatsApp or e-mail code) + details → pay (server prices it again). */
 export async function initCheckout(root: HTMLElement) {
   const $ = <T extends Element = HTMLElement>(s: string) => root.querySelector<T>(s)!;
   const live = Boolean(root.dataset.live);
@@ -28,7 +30,9 @@ export async function initCheckout(root: HTMLElement) {
   let shop: WebShop | null = null;
   let shopLive = false;
   let signedIn = false;
-  let mobile = '';
+  let target: SignInTarget | null = null;
+  /** Signed in by e-mail: a mobile number for delivery is needed too. */
+  let byEmail = false;
   let api: typeof import('../lib/account-api') | null = null;
   const getApi = async () => (api ??= await import('../lib/account-api'));
   try {
@@ -93,16 +97,16 @@ export async function initCheckout(root: HTMLElement) {
           : min > 0 && priced.goods < min
             ? `Minimum online order is ₹${min} before GST.`
             : !signedIn
-              ? 'Sign in with your mobile number (step 3).'
+              ? 'Sign in with WhatsApp or e-mail (step 3).'
               : !detailsOk()
-                ? 'Add your name and delivery address.'
+                ? byEmail ? 'Add your name, mobile number and delivery address.' : 'Add your name and delivery address.'
                 : '';
     $<HTMLButtonElement>('[data-pay]').disabled = !!why;
     $('[data-pay-why]').textContent = why;
   }
 
   const field = (n: string) => root.querySelector<HTMLInputElement | HTMLSelectElement>(`[name=${n}]`)!;
-  const detailsOk = () => field('name').value.trim() !== '' && addr.value.trim() !== '' && (!field('gstin').value.trim() || GSTIN.test(field('gstin').value.trim().toUpperCase()));
+  const detailsOk = () => field('name').value.trim() !== '' && addr.value.trim() !== '' && (!byEmail || mobile10(field('phone').value) !== '') && (!field('gstin').value.trim() || GSTIN.test(field('gstin').value.trim().toUpperCase()));
 
   function showStep(which: 'off' | 'phone' | 'code' | 'details') {
     for (const k of ['off', 'phone', 'code', 'details']) $(`[data-${k}]`).hidden = k !== which;
@@ -113,7 +117,11 @@ export async function initCheckout(root: HTMLElement) {
     const a = await getApi();
     const me = await a.link();
     signedIn = true;
-    $('[data-who]').textContent = `Signed in as +91 ${me.phone.replace(/\D/g, '').slice(-10)}`;
+    const who = await a.signedIn();
+    byEmail = Boolean(who && !who.phone);
+    $('[data-who]').textContent = who?.phone ? `Signed in as +91 ${who.phone.replace(/\D/g, '').slice(-10)}` : `Signed in as ${who?.email || me.email}`;
+    ($('[data-need-phone]') as HTMLElement).hidden = !byEmail;
+    if (byEmail && !field('phone').value) field('phone').value = me.phone.replace(/\D/g, '').slice(-10);
     if (!field('name').value) field('name').value = me.name;
     if (!field('company').value) field('company').value = me.company;
     if (!field('gstin').value) field('gstin').value = me.gstin;
@@ -148,16 +156,19 @@ export async function initCheckout(root: HTMLElement) {
 
   const phoneForm = $<HTMLFormElement>('[data-phone]');
   const codeForm = $<HTMLFormElement>('[data-code]');
+  const signIn = bindSignInForm(phoneForm);
   const send = async () => {
-    await (await getApi()).sendCode(mobile);
-    $('[data-mobile]').textContent = `+91 ${mobile.slice(0, 5)} ${mobile.slice(5)}`;
+    await (await getApi()).sendCode(target!);
+    $('[data-mobile]').textContent = targetLabel(target!);
+    $('[data-code-hint]').textContent = codeHint(target!);
     showStep('code');
     codeForm.querySelector<HTMLInputElement>('[name=code]')!.focus();
   };
   phoneForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    mobile = mobile10(phoneForm.querySelector<HTMLInputElement>('[name=mobile]')!.value);
-    if (!mobile) return err('Enter a 10-digit Indian mobile number.');
+    const t = signIn.read();
+    if (typeof t === 'string') return err(t);
+    target = t;
     err('');
     try {
       await send();
@@ -168,10 +179,10 @@ export async function initCheckout(root: HTMLElement) {
   codeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const code = codeForm.querySelector<HTMLInputElement>('[name=code]')!.value.replace(/\D/g, '');
-    if (code.length !== 6) return err('Enter the 6-digit code from the SMS.');
+    if (code.length !== 6) return err(codeHint(target!));
     err('');
     try {
-      await (await getApi()).verifyCode(mobile, code);
+      await (await getApi()).verifyCode(target!, code);
       await signedInView();
     } catch (x) {
       err(message(x));
@@ -188,7 +199,7 @@ export async function initCheckout(root: HTMLElement) {
     try {
       const a = await getApi();
       const gstin = field('gstin').value.trim().toUpperCase();
-      await a.link({ name: field('name').value.trim(), company: field('company').value.trim(), gstin, stateCode: field('stateCode').value || (gstin ? gstin.slice(0, 2) : ''), address: addr.value.trim(), email: field('email').value.trim() });
+      await a.link({ name: field('name').value.trim(), company: field('company').value.trim(), gstin, stateCode: field('stateCode').value || (gstin ? gstin.slice(0, 2) : ''), address: addr.value.trim(), email: field('email').value.trim(), ...(byEmail ? { phone: mobile10(field('phone').value) } : {}) });
       const token = await a.accessToken();
       if (!token) throw new Error('Your sign-in has expired. Please sign in again.');
       const { callFn, pay } = await import('../lib/pay');
@@ -214,7 +225,7 @@ export async function initCheckout(root: HTMLElement) {
   if (!shopLive) showStep('off');
   else {
     try {
-      if (await (await getApi()).signedInPhone()) await signedInView();
+      if (await (await getApi()).signedIn()) await signedInView();
       else showStep('phone');
     } catch {
       showStep('phone');

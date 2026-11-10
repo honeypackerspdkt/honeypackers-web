@@ -27,8 +27,10 @@ Overall plan: `admin/docs/online-business-plan.md`. Site, admin (`admin/`), data
   colours via CSS classes `.bx-*` in `brand.css`). `src/lib/price-list.ts`: live list from Supabase REST or the sample JSON (`fromDb` maps rows).
   `src/lib/quote-text.ts`: WhatsApp / enquiry text.
 - My orders (`/account/`): `src/lib/account.ts` (pure: rows → orders, totals, re-order, invoice company from `public_business`),
-  `src/lib/account-api.ts` (lazy supabase-js: SMS sign-in `+91…`, `buyer_link` RPC, own orders via RLS), `src/scripts/account.ts` (UI).
-  The SMS goes through the `send-sms-msg91` hook (`admin/supabase/functions`). jsPDF is a site dependency (deduped in astro.config) for the invoice PDF.
+  `src/lib/account-api.ts` (lazy supabase-js: sign-in by WhatsApp code to `+91…` or by e-mail code/link, `buyer_link` RPC, own orders via RLS),
+  `src/scripts/account.ts` (UI). Both sign-in forms use `components/SignInFields.astro` + `lib/signin-form.ts`; e-mail buyers give a mobile
+  for delivery (`buyer_link` `p_phone`, migration 11). The code goes out on WhatsApp through the `send-otp-whatsapp` hook (Supabase
+  Send SMS hook → Meta Cloud API, `admin/supabase/functions`; owner's choice over SMS/DLT: cheapest). `send-sms-msg91` is kept, unused. jsPDF is a site dependency (deduped in astro.config) for the invoice PDF.
 - Payments: `netlify/lib/shop.ts` (`createShop`: payOrder, checkoutCustom, verifyPayment, webhook, paymentLink; HMAC checks; amounts from
   box-core, never from the browser) + thin `netlify/functions/*.mts`; browser side `src/lib/pay.ts` (Razorpay checkout.js). SQL in
   `…07_payments.sql` (`web_create_order`, `record_razorpay_payment`, service role only). Setup in README → Online payment.

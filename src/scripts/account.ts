@@ -1,6 +1,7 @@
 import type { Customer, Order } from '@honeypackers/box-core/types';
 import { invoiceCompany, mobile10, orderView, reorderLink, reorderText } from '../lib/account';
 import * as api from '../lib/account-api';
+import { bindSignInForm, codeHint, targetLabel } from '../lib/signin-form';
 import { callFn, pay, type CheckoutStart } from '../lib/pay';
 
 const inr = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -27,7 +28,9 @@ export async function initAccount(root: HTMLElement) {
 
   if (!root.dataset.enabled) return show('off');
 
-  let mobile = '';
+  let target: api.SignInTarget | null = null;
+  /** Signed in by e-mail: ask for a mobile number for delivery. */
+  let byEmail = false;
   let me: Customer | null = null;
   let orders: Order[] = [];
   let business: Record<string, unknown> | null = null;
@@ -36,17 +39,20 @@ export async function initAccount(root: HTMLElement) {
   const codeForm = $<HTMLFormElement>('[data-view="code"]');
   const profileForm = $<HTMLFormElement>('[data-profile]');
 
+  const signIn = bindSignInForm(phoneForm);
   const sendCode = async () => {
-    await api.sendCode(mobile);
-    $('[data-mobile]').textContent = `+91 ${mobile.slice(0, 5)} ${mobile.slice(5)}`;
+    await api.sendCode(target!);
+    $('[data-mobile]').textContent = targetLabel(target!);
+    $('[data-code-hint]').textContent = codeHint(target!);
     show('code');
     codeForm.querySelector<HTMLInputElement>('[name=code]')!.focus();
   };
 
   phoneForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    mobile = mobile10(phoneForm.querySelector<HTMLInputElement>('[name=mobile]')!.value);
-    if (!mobile) return setError(phoneForm, 'Enter a 10-digit Indian mobile number.');
+    const t = signIn.read();
+    if (typeof t === 'string') return setError(phoneForm, t);
+    target = t;
     setError(phoneForm, '');
     busy(phoneForm, true);
     try {
@@ -61,11 +67,11 @@ export async function initAccount(root: HTMLElement) {
   codeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const code = codeForm.querySelector<HTMLInputElement>('[name=code]')!.value.replace(/\D/g, '');
-    if (code.length !== 6) return setError(codeForm, 'Enter the 6-digit code from the SMS.');
+    if (code.length !== 6) return setError(codeForm, codeHint(target!));
     setError(codeForm, '');
     busy(codeForm, true);
     try {
-      await api.verifyCode(mobile, code);
+      await api.verifyCode(target!, code);
       await openAccount();
     } catch (err) {
       setError(codeForm, message(err));
@@ -91,6 +97,8 @@ export async function initAccount(root: HTMLElement) {
     set('stateCode', c.stateCode || '');
     set('address', c.address);
     set('email', c.email);
+    set('phone', byEmail ? c.phone.replace(/\D/g, '').slice(-10) : '');
+    (profileForm.querySelector('[data-need-phone]') as HTMLElement).hidden = !byEmail;
   };
   const openProfile = (first: boolean) => {
     if (me) fillProfile(me);
@@ -106,12 +114,14 @@ export async function initAccount(root: HTMLElement) {
     const f = new FormData(profileForm);
     const v = (k: string) => String(f.get(k) || '').trim();
     if (!v('name')) return setError(profileForm, 'Please enter your name.');
+    const phone = byEmail ? mobile10(v('phone')) : '';
+    if (byEmail && !phone) return setError(profileForm, 'Please enter a 10-digit mobile number for delivery.');
     const gstin = v('gstin').toUpperCase();
     if (gstin && !/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(gstin)) return setError(profileForm, 'That GSTIN does not look right (15 characters, e.g. 33ABCDE1234F1Z5).');
     setError(profileForm, '');
     busy(profileForm, true);
     try {
-      me = await api.link({ name: v('name'), company: v('company'), gstin, stateCode: v('stateCode') || (gstin ? gstin.slice(0, 2) : ''), address: v('address'), email: v('email') });
+      me = await api.link({ name: v('name'), company: v('company'), gstin, stateCode: v('stateCode') || (gstin ? gstin.slice(0, 2) : ''), address: v('address'), email: v('email'), ...(phone ? { phone } : {}) });
       profileForm.hidden = true;
       renderWho();
       const back = new URLSearchParams(location.search).get('return');
@@ -131,7 +141,7 @@ export async function initAccount(root: HTMLElement) {
   });
 
   const renderWho = () => {
-    $('[data-who]').textContent = me ? `Signed in as ${me.name || 'you'} · ${me.phone ? `+91 ${me.phone.slice(-10, -5)} ${me.phone.slice(-5)}` : ''}${me.company ? ` · ${me.company}` : ''}` : '';
+    $('[data-who]').textContent = me ? `Signed in as ${me.name || 'you'} · ${me.phone ? `+91 ${me.phone.slice(-10, -5)} ${me.phone.slice(-5)}` : me.email}${me.company ? ` · ${me.company}` : ''}` : '';
   };
 
   const renderOrders = () => {
@@ -234,6 +244,8 @@ export async function initAccount(root: HTMLElement) {
   async function openAccount() {
     show('loading');
     try {
+      const who = await api.signedIn();
+      byEmail = Boolean(who && !who.phone);
       me = await api.link();
       const r = await api.myOrders();
       orders = r.orders;
@@ -241,10 +253,10 @@ export async function initAccount(root: HTMLElement) {
       renderWho();
       renderOrders();
       show('account');
-      if (!me.name) openProfile(true);
+      if (!me.name || (byEmail && !me.phone)) openProfile(true);
       // Came here to sign in from the price page: go back there.
       const back = new URLSearchParams(location.search).get('return');
-      if (back && back.startsWith('/') && !back.startsWith('//') && me.name) location.href = back;
+      if (back && back.startsWith('/') && !back.startsWith('//') && me.name && (!byEmail || me.phone)) location.href = back;
       const done = new URLSearchParams(location.search).get('paid');
       if (done) flash(`Thank you! Order ${done} is placed. We'll confirm the delivery date.`);
     } catch (err) {
@@ -255,7 +267,7 @@ export async function initAccount(root: HTMLElement) {
 
   show('loading');
   try {
-    if (await api.signedInPhone()) return void (await openAccount());
+    if (await api.signedIn()) return void (await openAccount());
   } catch {
     /* not signed in */
   }

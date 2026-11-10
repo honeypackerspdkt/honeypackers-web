@@ -83,15 +83,15 @@ export function SignIn({ run, busy }: { run: Run; busy: boolean }) {
       if (by === 'mobile') await cloud.sendPhoneCode(digits);
       else await cloud.sendCode(email);
       setSent(true);
-    }, by === 'mobile' ? 'Code sent by SMS' : 'E-mail sent: open the link in it, or type the code');
+    }, by === 'mobile' ? 'Code sent on WhatsApp' : 'E-mail sent: open the link in it, or type the code');
   const verify = () => run(() => (by === 'mobile' ? cloud.verifyPhoneCode(digits, code) : cloud.verifyCode(email, code)));
   return (
     <Section title="Sign in">
       <div className="card space-y-4 p-4">
-        {!sent && <Segmented<'mobile' | 'email'> value={by} onChange={(v) => (setBy(v), setCode(''))} options={[{ value: 'mobile', label: 'Mobile number' }, { value: 'email', label: 'E-mail' }]} />}
-        <p className="text-[14px] text-muted-foreground">{by === 'mobile' ? "We'll send a 6-digit code by SMS." : "We'll e-mail you a sign-in link (or a 6-digit code). Open the link on this device."} No password needed.</p>
+        {!sent && <Segmented<'mobile' | 'email'> value={by} onChange={(v) => (setBy(v), setCode(''))} options={[{ value: 'mobile', label: 'WhatsApp' }, { value: 'email', label: 'E-mail' }]} />}
+        <p className="text-[14px] text-muted-foreground">{by === 'mobile' ? "We'll send a 6-digit code on WhatsApp." : "We'll e-mail you a sign-in link (or a 6-digit code). Open the link on this device."} No password needed.</p>
         {by === 'mobile' ? (
-          <Field label="Mobile number">
+          <Field label="Mobile number (on WhatsApp)">
             <div className="flex items-center gap-2">
               <span className="input flex w-16 shrink-0 items-center justify-center text-muted-foreground">+91</span>
               <input className="input tnum" type="tel" inputMode="numeric" autoComplete="tel-national" maxLength={11} placeholder="98765 43210" value={mobile} onChange={(e) => setMobile(e.target.value.replace(/[^\d ]/g, ''))} disabled={sent} />
@@ -108,7 +108,7 @@ export function SignIn({ run, busy }: { run: Run; busy: boolean }) {
           </button>
         ) : (
           <>
-            <Field label={by === 'mobile' ? 'Code from the SMS' : 'Code from the e-mail'}>
+            <Field label={by === 'mobile' ? 'Code from WhatsApp' : 'Code from the e-mail'}>
               <input className="input tnum tracking-[0.3em]" inputMode="numeric" autoComplete="one-time-code" maxLength={8} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
             </Field>
             <div className="grid grid-cols-2 gap-3">

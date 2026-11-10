@@ -103,13 +103,13 @@ function clients(d: ShopDeps) {
   };
   const rpc = <T>(fn: string, args: Row) => rest<T>(`rpc/${fn}`, { method: 'POST', body: JSON.stringify(args) });
   /** The signed-in user behind the browser's / app's access token. */
-  const user = async (req: Request): Promise<{ id: string; phone: string }> => {
+  const user = async (req: Request): Promise<{ id: string; phone: string; email: string }> => {
     const token = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
     if (!token) bad(401, 'Please sign in first.');
     const r = await d.fetch(`${base}/auth/v1/user`, { headers: { apikey: env.SUPABASE_ANON_KEY, authorization: `Bearer ${token}` } });
     if (!r.ok) bad(401, 'Your sign-in has expired. Please sign in again.');
     const u = (await r.json()) as Row;
-    return { id: String(u.id), phone: String(u.phone || '') };
+    return { id: String(u.id), phone: String(u.phone || ''), email: String(u.email || '') };
   };
   /** buyer_link as the buyer (so their customer record exists and is theirs). */
   const linkBuyer = async (req: Request) => {
@@ -265,7 +265,7 @@ export function createShop(d: ShopDeps) {
         p_artwork: artwork,
       });
       const total = checkoutTotals(p.amount, delivery, TAX_PCT).total;
-      return json(200, await checkoutFor(made.id, made.number, advanceAmount(total, shop.advancePct), u.phone, ''));
+      return json(200, await checkoutFor(made.id, made.number, advanceAmount(total, shop.advancePct), u.phone, u.email));
     }),
 
     /** Buyer checks out the cart of standard products. Body: { lines: [{ productId, packQty, count }], pincode } */
@@ -303,7 +303,7 @@ export function createShop(d: ShopDeps) {
         p_notes: 'Ordered on the website (standard boxes)',
       });
       const total = checkoutTotals(priced.goods, delivery, TAX_PCT).total;
-      return json(200, await checkoutFor(made.id, made.number, advanceAmount(total, shop.advancePct), u.phone, ''));
+      return json(200, await checkoutFor(made.id, made.number, advanceAmount(total, shop.advancePct), u.phone, u.email));
     }),
 
     /** Browser reports a finished checkout. Records the payment if Razorpay says it is captured (the webhook does it otherwise). */
