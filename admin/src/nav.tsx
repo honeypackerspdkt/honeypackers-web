@@ -16,6 +16,7 @@ export type Route =
   | { name: 'backup' }
   | { name: 'settings'; section?: string }
   | { name: 'stock' }
+  | { name: 'boxStock' }
   | { name: 'reel'; id: string }
   | { name: 'reelEdit'; id?: string; width?: number; bf?: number; gsm?: number }
   | { name: 'webPrices' }

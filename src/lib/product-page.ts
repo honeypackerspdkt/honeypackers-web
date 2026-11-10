@@ -169,7 +169,7 @@ export function productJsonLd(p: Product, url: string, brandName: string) {
       lowPrice: Math.min(...per).toFixed(2),
       highPrice: Math.max(...per).toFixed(2),
       offerCount: p.packs.length,
-      availability: p.stockQty != null && p.stockQty <= 0 ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+      availability: p.stockQty != null && p.stockQty <= 0 ? 'https://schema.org/BackOrder' : 'https://schema.org/InStock',
       url,
     },
   };

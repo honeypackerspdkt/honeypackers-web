@@ -11,9 +11,10 @@ export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', 
 
 export function stockText(p: Product): { text: string; cls: string; out: boolean } {
   if (p.stockQty == null) return { text: 'Made to order', cls: 'muted', out: false };
-  if (p.stockQty <= 0) return { text: 'Out of stock', cls: 'stock-low', out: true };
-  if (p.stockQty < (p.packs[0]?.qty || 0) * 3) return { text: `Only ${p.stockQty.toLocaleString('en-IN')} left`, cls: 'stock-low', out: false };
-  return { text: `${p.stockQty.toLocaleString('en-IN')} in stock`, cls: 'stock-ok', out: false };
+  // owner's choice: out of stock still sells, made to order
+  if (p.stockQty <= 0) return { text: `Out of stock: made to order in about ${p.madeDays || 7} days`, cls: 'stock-low', out: false };
+  if (p.stockQty < (p.packs[0]?.qty || 0) * 3) return { text: `Only ${p.stockQty.toLocaleString('en-IN')} in stock, more made to order`, cls: 'stock-low', out: false };
+  return { text: `${p.stockQty.toLocaleString('en-IN')} in stock, ready to ship`, cls: 'stock-ok', out: false };
 }
 
 export function productTile(p: Product, href: string): string {

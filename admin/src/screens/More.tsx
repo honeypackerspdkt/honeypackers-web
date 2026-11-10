@@ -1,9 +1,10 @@
-import { Box, CircleHelp, Cloud, DatabaseBackup, Globe, Inbox as InboxIcon, Layers, Package, Plus, Settings2, UserCog } from 'lucide-react';
+import { Box, CircleHelp, Container, Cloud, DatabaseBackup, Globe, Inbox as InboxIcon, Layers, Package, Plus, Settings2, UserCog } from 'lucide-react';
 import { setupProblems } from '@honeypackers/box-core/pricing';
 import { usePerms, useStore } from '../store';
 import { useNav } from '../nav';
 import { specLabel } from '@honeypackers/box-core/calc';
 import { stockAlerts, stockByGrade } from '../lib/stock';
+import { boxStockSummary } from '../lib/box-stock';
 import { timeAgo } from '../lib/format';
 import type { AppData } from '../lib/types';
 import type { CloudStatus } from '../lib/cloud/controller';
@@ -98,6 +99,18 @@ export function More() {
                 }
                 title="Paper stock"
                 sub={stockSub(data)}
+              />
+            )}
+            {p.boxStock && (
+              <Row
+                onClick={() => nav.push({ name: 'boxStock' })}
+                icon={
+                  <span className={iconCls}>
+                    <Container size={20} />
+                  </span>
+                }
+                title="Box stock"
+                sub={boxStockSummary(data.products)}
               />
             )}
             {p.ownerSettings && (

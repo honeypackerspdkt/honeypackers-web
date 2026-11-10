@@ -221,3 +221,34 @@ export async function setOrderStatus(orderId: string, status: string, delivery?:
   const { error } = await getClient().rpc('set_order_status', { p_order: orderId, p_status: status, p_delivery: delivery ?? null });
   if (error) fail(error);
 }
+
+/* ───────────── ready-made box stock (migration 13) ───────────── */
+
+export type BoxStockKind = 'made' | 'sold' | 'returned' | 'correction';
+export interface BoxStockMove {
+  id: string;
+  kind: BoxStockKind;
+  qty: number;
+  note: string;
+  orderId: string | null;
+  createdAt: string;
+}
+
+/** Boxes made (+) or a correction (±) for a product; returns the new count. Starts stock keeping for a made-to-order product. */
+export async function boxStockChange(productId: string, kind: 'made' | 'correction', qty: number, note = ''): Promise<number> {
+  const { data, error } = await getClient().rpc('box_stock_change', { p_product: productId, p_kind: kind, p_qty: Math.trunc(qty), p_note: note });
+  if (error) fail(error);
+  return Number(data);
+}
+
+/** The latest stock changes of one product, newest first. */
+export async function boxStockMoves(productId: string, limit = 50): Promise<BoxStockMove[]> {
+  const { data, error } = await getClient()
+    .from('box_stock_moves')
+    .select('id, kind, qty, note, order_id, created_at')
+    .eq('product_id', productId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) fail(error);
+  return (data || []).map((r) => ({ id: r.id, kind: r.kind, qty: Number(r.qty), note: r.note || '', orderId: r.order_id, createdAt: r.created_at }));
+}

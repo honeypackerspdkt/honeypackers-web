@@ -291,7 +291,7 @@ export function createShop(d: ShopDeps) {
 
       await c.linkBuyer(req);
       const items = [
-        ...priced.lines.map((l) => ({ description: `${l.product.name} (pack of ${l.pack.qty})`, qty: l.count, rate: l.pack.price, hsn: l.product.hsn || '48191010', unit: 'Pack', spec: publicSpec(l.product.spec) })),
+        ...priced.lines.map((l) => ({ description: `${l.product.name} (pack of ${l.pack.qty})${l.madeToOrder > 0 && l.product.stockQty != null ? `, ${l.madeToOrder} made to order` : ''}`, qty: l.count, rate: l.pack.price, hsn: l.product.hsn || '48191010', unit: 'Pack', spec: publicSpec(l.product.spec), product_id: l.product.id, pack_qty: l.pack.qty })),
         ...(delivery > 0 ? [{ description: `Delivery (${zone.name})`, qty: 1, rate: delivery }] : []),
       ];
       const made = await c.rpc<{ id: string; number: string }>('web_create_order', {

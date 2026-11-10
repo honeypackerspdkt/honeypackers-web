@@ -19,6 +19,7 @@ import { CloudSync } from './screens/Cloud';
 import { Team } from './screens/Team';
 import { Inbox } from './screens/Inbox';
 import { ProductEdit, ProductsList } from './screens/Products';
+import { BoxStock } from './screens/BoxStock';
 import { Help } from './screens/Help';
 import { Backup } from './screens/Backup';
 import { DesktopNav } from './DesktopNav';
@@ -82,6 +83,8 @@ function renderRoute(r: Route) {
       return <Inbox />;
     case 'products':
       return <ProductsList />;
+    case 'boxStock':
+      return <BoxStock />;
     case 'product':
       return <ProductEdit id={r.id} />;
     case 'help':

@@ -274,11 +274,17 @@ describe('cart of standard products', () => {
     expect(out.amount).toBe(367500);
   });
 
-  it('refuses switched-off products, missing packs, too many boxes and empty carts', async () => {
+  it('takes short stock as made to order and tells the database which product and pack each line is', async () => {
+    const r = await shop().checkoutCart(post('buyer', { lines: [{ productId: 'prod-2', packQty: 50, count: 2 }], pincode: '622001' }));
+    expect(r.status, JSON.stringify(await r.clone().json())).toBe(200);
+    const line = db.order_items.filter((i) => i.order_id === db.orders.at(-1)!.id)[0];
+    expect(line).toMatchObject({ description: 'Few left (pack of 50), 40 made to order', qty: 2, product_id: 'prod-2', pack_qty: 50 });
+  });
+
+  it('refuses switched-off products, missing packs and empty carts', async () => {
     const err = async (lines: unknown[], pincode = '622001') => (await (await shop().checkoutCart(post('buyer', { lines, pincode }))).json()).error;
     expect(await err([{ productId: 'prod-off', packQty: 1, count: 1 }])).toMatch(/no longer sold/);
     expect(await err([{ productId: 'prod-1', packQty: 30, count: 1 }])).toMatch(/pack size/);
-    expect(await err([{ productId: 'prod-2', packQty: 50, count: 2 }])).toMatch(/only 60 boxes/);
     expect(await err([])).toMatch(/empty/);
     expect(await err([{ productId: 'prod-1', packQty: 25, count: 1 }], '600001')).toMatch(/Courier/);
     expect((await shop().checkoutCart(post(null, { lines: [{ productId: 'prod-1', packQty: 25, count: 1 }] }))).status).toBe(401);

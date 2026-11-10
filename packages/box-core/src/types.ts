@@ -138,8 +138,12 @@ export interface Product {
   packs: ProductPack[];
   hsn: string;
   taxPct: number;
-  /** Boxes in stock; null = made to order. */
+  /** Boxes in stock; null = made to order. Changed through box stock moves (made / sold / returned / correction). */
   stockQty: number | null;
+  /** Low-stock alert level in boxes (admin); null/undefined = no alert. */
+  stockMin?: number | null;
+  /** Days to make it when out of stock (website shows "made to order, about N days"). */
+  madeDays?: number;
   photos: string[];
   active: boolean;
   sort: number;

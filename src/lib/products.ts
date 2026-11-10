@@ -18,6 +18,7 @@ export function productFromRow(r: Row): Product {
     hsn: String(r.hsn ?? '48191010'),
     taxPct: num(r.tax_pct ?? r.taxPct ?? 5),
     stockQty: r.stock_qty == null && r.stockQty == null ? null : num(r.stock_qty ?? r.stockQty),
+    madeDays: num(r.made_days ?? r.madeDays) || 7,
     photos: Array.isArray(r.photos) ? (r.photos as string[]) : [],
     active: r.active !== false,
     sort: num(r.sort),
