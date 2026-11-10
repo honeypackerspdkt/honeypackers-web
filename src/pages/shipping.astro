@@ -1,0 +1,32 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../site';
+const contact = [site.email, site.phone].filter(Boolean).join(' / ');
+---
+
+<Base title="Shipping and delivery policy" description={`Where and how ${site.name} delivers, and how long it takes.`}>
+  <section class="section" style="padding-top:32px">
+    <div class="container prose">
+      <h1>Shipping and delivery policy</h1>
+
+      <h2>Where we deliver</h2>
+      <p>We deliver within India. Nearby areas are served by our own vehicle; other places by courier or transport. You can also collect your order from our factory. Enter your pincode on the product, custom box or checkout page to see whether we deliver there and how.</p>
+
+      <h2>Delivery charges</h2>
+      <p>The delivery charge depends on your pincode and the weight of the order, and is shown before you pay. Larger orders to some areas are delivered free, as shown at checkout. If the page says "Ask us", contact us for a delivery quote.</p>
+
+      <h2>How long it takes</h2>
+      <ul>
+        <li><strong>Ready stock:</strong> dispatched within 2–3 working days of payment.</li>
+        <li><strong>Custom sizes and printed boxes:</strong> made and dispatched within 7–10 working days of payment (and artwork approval for printed boxes). Large orders may take longer; we will tell you if so.</li>
+        <li>After dispatch, transit time depends on your area and is shown at checkout.</li>
+      </ul>
+      <p>These times are estimates. We will keep you informed if anything delays your order, and you can follow its status in <a href="/account/">My orders</a>.</p>
+
+      <h2>On delivery</h2>
+      <p>Please check the boxes when they arrive and report any damage or shortage within 48 hours, as explained in our <a href="/refund/">Cancellation and refund policy</a>.</p>
+      {contact && <p>Questions about delivery: {contact}.</p>}
+      <p class="muted small">Last updated: November 2026.</p>
+    </div>
+  </section>
+</Base>

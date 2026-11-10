@@ -1,0 +1,35 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../site';
+const contact = [site.email, site.phone].filter(Boolean).join(' / ');
+---
+
+<Base title="Cancellation and refund policy" description={`How cancellations, replacements and refunds work at ${site.name}.`}>
+  <section class="section" style="padding-top:32px">
+    <div class="container prose">
+      <h1>Cancellation and refund policy</h1>
+      <p>Most of our boxes are made to order, so this policy depends on whether production has started.</p>
+
+      <h2>Cancelling an order</h2>
+      <ul>
+        <li><strong>Before production starts</strong> (or, for ready stock, before dispatch): you can cancel and get a full refund.</li>
+        <li><strong>After production starts</strong> on a custom size or printed order: the order cannot be cancelled, because the boxes are made specially for you and cannot be sold to anyone else.</li>
+        <li>You can see the status of your order in <a href="/account/">My orders</a>. To cancel, contact us{contact && <> at {contact}</>} with your order number.</li>
+      </ul>
+
+      <h2>Damaged, wrong or short deliveries</h2>
+      <ul>
+        <li>Please check the boxes when they arrive. If any are damaged in transit, different from what you ordered, or short in number, tell us within <strong>48 hours of delivery</strong> with your order number and photos.</li>
+        <li>Once we confirm the problem, we will replace the affected boxes free of charge or refund their value, as you prefer.</li>
+        <li>Boxes made correctly to the size, grade and artwork you approved cannot be returned, except under the tolerances in our <a href="/terms/">terms</a>.</li>
+      </ul>
+
+      <h2>How refunds are paid</h2>
+      <ul>
+        <li>Approved refunds are made to the original payment method (UPI, card or bank account) through Razorpay, within <strong>5–7 working days</strong> of approval. Your bank may take a few more days to show it.</li>
+        <li>If money was debited but the payment failed or no order was created, it is normally reversed automatically by your bank within 5–7 working days. If not, contact us with the payment details.</li>
+      </ul>
+      <p class="muted small">Last updated: November 2026.</p>
+    </div>
+  </section>
+</Base>

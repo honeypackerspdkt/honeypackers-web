@@ -113,7 +113,7 @@ export function Team() {
           <UserPlus size={18} /> Invite someone
         </button>
         <p className="mt-3 px-1 text-[12.5px] text-muted-foreground">
-          They install BoxBook, open More → Cloud sync and sign in with the mobile number (SMS code) or e-mail you invited. They then join your business with the role you chose.
+          They open honeypackers.in/admin and sign in with the e-mail (or mobile number) you invited. They then join Honey Packers with the role you chose.
         </p>
       </Page>
 
@@ -240,7 +240,7 @@ function MemberForm({ member, isMe, onSave }: { member: Member; isMe: boolean; o
         </p>
       )}
       <RolePicker value={role} onChange={setRole} />
-      <Toggle checked={active} onChange={setActive} label="Can use BoxBook" desc={isMe ? 'This is you.' : 'Switch off when someone leaves; their history stays.'} />
+      <Toggle checked={active} onChange={setActive} label="Can use the admin" desc={isMe ? 'This is you.' : 'Switch off when someone leaves; their history stays.'} />
       <button
         className="btn-primary w-full"
         disabled={busy || (role === member.role && active === member.active)}

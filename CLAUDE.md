@@ -16,7 +16,7 @@ Overall plan: `admin/docs/online-business-plan.md`. Site, admin (`admin/`), data
   Logo `public/honey-packers-logo-header.webp` (cropped from `honey-packers-logo-precision.webp`), PNG icons, `site.webmanifest`, OG image.
 - Storefront: `src/pages`: `index` (home), `shop` (grid + filters/sort/search), `products/[slug]` (static product pages) +
   `product/` (any product by `?p=`), `checkout` (one page: boxes, delivery, inline SMS sign-in + details, pay), `custom-box`, `account`,
-  `contact`, `thanks`, `privacy`, `404`. `public/_redirects`: `/cart/` → `/checkout/`, `/products/` → `/shop/`, `/box-strength-calculator/` (removed, owner's choice) → `/custom-box/`.
+  `contact`, `thanks`, `privacy`, `terms`, `refund`, `shipping` (policy pages Razorpay checks; linked in the footer and checkout), `404`. `public/_redirects`: `/cart/` → `/checkout/`, `/products/` → `/shop/`, `/box-strength-calculator/` (removed, owner's choice) → `/custom-box/`.
 - Shared UI: `components/Header.astro` (promo strip, search, menu, account, cart badge), `components/CartDrawer.astro` (<dialog> mini cart),
   `components/Footer.astro` (trust strip + footer). `lib/icons.ts` (inline SVG), `lib/catalog.ts` (products + price list loaded once per page,
   `productHref`, `fromPrice`), `lib/product-card.ts` (`productTile`), `lib/product-page.ts` (`productPageHtml`, `initProductPage`, `productJsonLd`),

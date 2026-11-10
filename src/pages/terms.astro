@@ -1,0 +1,49 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../site';
+const contact = [site.email, site.phone].filter(Boolean).join(' / ');
+const place = site.city;
+---
+
+<Base title="Terms and conditions" description={`The terms for buying boxes from ${site.name} on honeypackers.in.`}>
+  <section class="section" style="padding-top:32px">
+    <div class="container prose">
+      <h1>Terms and conditions</h1>
+      <p>These terms apply when you order from {site.name} ("we", "us") on honeypackers.in, by WhatsApp or by phone. By placing an order you agree to them.</p>
+
+      <h2>Who we are</h2>
+      <p>{site.name} makes corrugated boxes and cartons{site.address ? <>, at {site.address}</> : place ? <> in {place}</> : ''}.{site.gstin && <> GSTIN {site.gstin}.</>}{contact && <> Contact: {contact}.</>}</p>
+
+      <h2>Orders and prices</h2>
+      <ul>
+        <li>Prices on the website are per box, in Indian rupees, and GST (5%, HSN 4819) is added on top. The price shown when you place the order is the price you pay.</li>
+        <li>An order is confirmed once the payment (or the advance shown at checkout) is received. We may decline an order, for example if a size cannot be made; any payment is then refunded in full.</li>
+        <li>Bulk and special orders may be quoted separately. A written quote is valid for the period stated on it.</li>
+      </ul>
+
+      <h2>Custom sizes and printing</h2>
+      <ul>
+        <li>Custom boxes are made to the size, board grade and printing you choose. Please check them carefully before ordering.</li>
+        <li>For printed boxes, the logo and text you place in the designer are printed as shown. Colours on paper can differ slightly from your screen.</li>
+        <li>You confirm that you have the right to use any logo, name or artwork you send us. We may refuse artwork that is unlawful or infringes someone else's rights.</li>
+        <li>Corrugated boxes are made within normal trade tolerances: about ±3 mm on dimensions, small shade differences in printing, and up to ±5% on quantity for custom orders, billed at the actual quantity supplied.</li>
+      </ul>
+
+      <h2>Payment</h2>
+      <p>Online payments are processed securely by Razorpay (UPI, cards, net banking). We never see or store your card or UPI details. A GST invoice is issued with every order.</p>
+
+      <h2>Delivery, cancellation and refunds</h2>
+      <p>See our <a href="/shipping/">Shipping and delivery policy</a> and <a href="/refund/">Cancellation and refund policy</a>.</p>
+
+      <h2>Liability</h2>
+      <p>Our responsibility for any order is limited to replacing the boxes or refunding the amount paid for them. We are not liable for indirect losses, such as loss of business or damage to goods packed in the boxes, except where the law does not allow this to be limited.</p>
+
+      <h2>Law and disputes</h2>
+      <p>These terms are governed by the laws of India. Please contact us first so we can sort out any problem; if that does not work, {place ? <>the courts at {place} have jurisdiction.</> : <>the courts where our business is located have jurisdiction.</>}</p>
+
+      <h2>Changes</h2>
+      <p>We may update these terms. The version on this page when you place an order applies to that order.</p>
+      <p class="muted small">Last updated: November 2026.</p>
+    </div>
+  </section>
+</Base>
