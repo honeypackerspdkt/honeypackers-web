@@ -133,7 +133,7 @@ export function Backup() {
           <div className="space-y-2">
             <p>
               {isNative
-                ? 'Backups are saved in Documents/BoxBook/Backups (on iPhone: Files app → On My iPhone → BoxBook). On Android they stay even if the app is uninstalled.'
+                ? 'Backups are saved in Documents/HoneyPackers/Backups (on iPhone: Files app → On My iPhone → Honey Packers). On Android they stay even if the app is uninstalled.'
                 : 'In the browser, backups are kept in browser storage. Use “Export file” to save one to your computer.'}
             </p>
             <p>A backup holds everything: customers, orders, saved boxes, your company profile (bank details, invoice numbers) and your logo.</p>

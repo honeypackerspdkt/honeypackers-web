@@ -177,7 +177,7 @@ export function More() {
         </Section>
 
         <p className="px-2 text-center text-[12.5px] text-muted-foreground">
-          BoxBook keeps all data on this phone only. There is no account and no server — so back up regularly.
+          Honey Packers Admin keeps your data in the Honey Packers database; only staff you invite can sign in. You can also keep your own backup copies.
         </p>
       </Page>
     </>

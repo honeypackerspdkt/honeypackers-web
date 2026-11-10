@@ -93,11 +93,11 @@ describe('Drive calls', () => {
 
   it('creates the folder and uploads a new file into it', async () => {
     signedIn();
-    mockFetch(json({ files: [] }), json({ id: 'F1' }), json({ files: [] }), json({ id: 'D1', name: 'BoxBook-auto-2026-11-03.json', modifiedTime: '2026-11-03T10:00:00Z', size: '123' }));
-    const f = await uploadDriveBackup('BoxBook-auto-2026-11-03.json', '{"x":1}', { interactive: false });
-    expect(f).toEqual({ id: 'D1', name: 'BoxBook-auto-2026-11-03.json', modifiedTime: '2026-11-03T10:00:00Z', size: 123 });
+    mockFetch(json({ files: [] }), json({ id: 'F1' }), json({ files: [] }), json({ id: 'D1', name: 'HoneyPackers-auto-2026-11-03.json', modifiedTime: '2026-11-03T10:00:00Z', size: '123' }));
+    const f = await uploadDriveBackup('HoneyPackers-auto-2026-11-03.json', '{"x":1}', { interactive: false });
+    expect(f).toEqual({ id: 'D1', name: 'HoneyPackers-auto-2026-11-03.json', modifiedTime: '2026-11-03T10:00:00Z', size: 123 });
     expect(calls[1].init.method).toBe('POST');
-    expect(JSON.parse(String(calls[1].init.body))).toMatchObject({ name: 'BoxBook Backups', mimeType: 'application/vnd.google-apps.folder' });
+    expect(JSON.parse(String(calls[1].init.body))).toMatchObject({ name: 'Honey Packers Backups', mimeType: 'application/vnd.google-apps.folder' });
     const up = calls[3];
     expect(up.url).toContain('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart');
     expect(up.init.method).toBe('POST');
@@ -122,12 +122,12 @@ describe('Drive calls', () => {
     localStorage.setItem('boxbook-drive-folder', 'F1');
     mockFetch(
       json({ files: [] }),
-      json({ id: 'N', name: 'BoxBook-auto-3', modifiedTime: '', size: '1' }),
+      json({ id: 'N', name: 'HoneyPackers-auto-3', modifiedTime: '', size: '1' }),
       json({ files: [{ id: 'a' }, { id: 'b' }, { id: 'c' }] }),
       new Response(null, { status: 204 }),
       new Response(null, { status: 204 }),
     );
-    await uploadDriveBackup('BoxBook-auto-3', '{}', { keepAuto: 1 });
+    await uploadDriveBackup('HoneyPackers-auto-3', '{}', { keepAuto: 1 });
     expect(calls.slice(3).map((c) => [c.init.method, c.url.split('/').pop()])).toEqual([
       ['DELETE', 'b'],
       ['DELETE', 'c'],
@@ -137,8 +137,8 @@ describe('Drive calls', () => {
   it('lists backups newest first', async () => {
     signedIn();
     localStorage.setItem('boxbook-drive-folder', 'F1');
-    mockFetch(json({ files: [{ id: '1', name: 'BoxBook-backup-x.json', modifiedTime: '2026-11-03T10:00:00Z', size: '2048' }] }));
-    expect(await listDriveBackups()).toEqual([{ id: '1', name: 'BoxBook-backup-x.json', modifiedTime: '2026-11-03T10:00:00Z', size: 2048 }]);
+    mockFetch(json({ files: [{ id: '1', name: 'HoneyPackers-backup-x.json', modifiedTime: '2026-11-03T10:00:00Z', size: '2048' }] }));
+    expect(await listDriveBackups()).toEqual([{ id: '1', name: 'HoneyPackers-backup-x.json', modifiedTime: '2026-11-03T10:00:00Z', size: 2048 }]);
     const u = new URL(calls[0].url);
     expect(u.searchParams.get('orderBy')).toBe('modifiedTime desc');
     expect(u.searchParams.get('q')).toContain("'F1' in parents");
@@ -151,7 +151,7 @@ describe('Drive calls', () => {
     expect((await downloadDriveBackup('abc')).customers).toHaveLength(1);
     expect(calls[0].url).toContain('/files/abc?alt=media');
     mockFetch(json({ hello: 'world' }));
-    await expect(downloadDriveBackup('abc')).rejects.toThrow(/not a BoxBook backup/);
+    await expect(downloadDriveBackup('abc')).rejects.toThrow(/not a Honey Packers backup/);
   });
 
   it('asks to sign in again when Google rejects the token', async () => {

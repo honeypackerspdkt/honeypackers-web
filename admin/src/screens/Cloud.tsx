@@ -25,7 +25,7 @@ export function CloudSync() {
 
   return (
     <>
-      <Header title="Cloud sync" subtitle={st.orgName || 'Use BoxBook on several phones'} back />
+      <Header title="Cloud sync" subtitle={st.orgName || 'Honey Packers Admin'} back />
       <Page>
         {st.phase === 'off' && <NotSetUp />}
         {st.phase === 'signed-out' && <SignIn run={run} busy={busy} />}
@@ -62,7 +62,7 @@ function NotSetUp() {
       <div className="text-[14px]">
         <p className="font-semibold">Not set up in this build</p>
         <p className="mt-1 text-muted-foreground">
-          Cloud sync keeps the same customers, orders and prices on every phone of your business and on the website. It needs the BoxBook cloud project; until then everything stays on this phone, with daily backups as before.
+          Cloud sync keeps the same customers, orders and prices on every phone of your business and on the website. It needs the Honey Packers database connection; until then everything stays on this device.
         </p>
       </div>
     </div>

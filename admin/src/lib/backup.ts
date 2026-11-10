@@ -12,7 +12,7 @@ export interface BackupEntry {
   size: number;
 }
 
-const FOLDER = 'BoxBook/Backups';
+const FOLDER = 'HoneyPackers/Backups';
 const DATA_FOLDER = 'backups';
 const WEB_KEY = 'boxbook-auto-backups';
 
@@ -23,7 +23,7 @@ const stamp = () => {
 };
 
 /** File name for a backup: one per day for the automatic copy, time-stamped for manual ones. */
-export const backupName = (kind: 'auto' | 'manual') => (kind === 'auto' ? `BoxBook-auto-${todayISO()}.json` : `BoxBook-backup-${stamp()}.json`);
+export const backupName = (kind: 'auto' | 'manual') => (kind === 'auto' ? `HoneyPackers-auto-${todayISO()}.json` : `HoneyPackers-backup-${stamp()}.json`);
 
 export const toJson = (data: AppData) => JSON.stringify({ ...data, savedAt: new Date().toISOString() }, null, 1);
 
@@ -87,7 +87,7 @@ export async function deleteBackup(entry: BackupEntry) {
 }
 
 async function prune(keep: number) {
-  const autos = (await listBackups()).filter((b) => b.name.startsWith('BoxBook-auto-'));
+  const autos = (await listBackups()).filter((b) => b.name.startsWith('HoneyPackers-auto-'));
   for (const b of autos.slice(Math.max(1, keep))) {
     try {
       await deleteBackup(b);
@@ -116,14 +116,14 @@ export async function saveBackupOnDevice(data: AppData, kind: 'auto' | 'manual',
 
 /** Exports a backup file and opens the share sheet (save to Drive, Files, WhatsApp, e-mail…). */
 export async function exportBackup(data: AppData) {
-  const name = `BoxBook-backup-${stamp()}.json`;
+  const name = `HoneyPackers-backup-${stamp()}.json`;
   const json = toJson(data);
   if (!isNative) {
     downloadText(name, json);
     return;
   }
   const w = await Filesystem.writeFile({ path: name, directory: Directory.Cache, data: json, encoding: Encoding.UTF8 });
-  await Share.share({ title: 'BoxBook backup', files: [w.uri], dialogTitle: 'Save or send backup' });
+  await Share.share({ title: 'Honey Packers backup', files: [w.uri], dialogTitle: 'Save or send backup' });
 }
 
 export async function shareBackupEntry(entry: BackupEntry) {
@@ -148,7 +148,7 @@ export async function parseBackupFile(file: File): Promise<AppData> {
 }
 
 export function backupLocationLabel(entry: BackupEntry) {
-  if (entry.dir === Directory.Documents) return 'Documents/BoxBook/Backups';
+  if (entry.dir === Directory.Documents) return 'Documents/HoneyPackers/Backups';
   if (entry.dir === 'web') return 'Browser storage';
   return 'App storage';
 }

@@ -39,9 +39,9 @@ export function emptyData(): AppData {
 
 /** Validates and fills in anything missing so older/partial files still load. */
 export function normalize(raw: unknown): AppData {
-  if (!raw || typeof raw !== 'object') throw new Error('Not a BoxBook data file');
+  if (!raw || typeof raw !== 'object') throw new Error('Not a Honey Packers data file');
   const d = raw as Partial<AppData>;
-  if (d.app !== 'boxbook') throw new Error('This file is not a BoxBook backup');
+  if (d.app !== 'boxbook') throw new Error('This file is not a Honey Packers backup');
   if (!Array.isArray(d.customers) || !Array.isArray(d.orders)) throw new Error('Backup file is damaged');
   return {
     app: 'boxbook',

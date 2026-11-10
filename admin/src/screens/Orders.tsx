@@ -40,7 +40,7 @@ const sourceOf = (o: Order): 'web' | 'app' => (o.source === 'web' ? 'web' : 'app
 export function SourceChip({ o }: { o: Order }) {
   const web = sourceOf(o) === 'web';
   return (
-    <span className={`chip shrink-0 ${web ? 'bg-primary/12 text-primary' : 'bg-muted text-muted-foreground'}`} title={web ? 'Ordered on the website' : 'Made in BoxBook'}>
+    <span className={`chip shrink-0 ${web ? 'bg-primary/12 text-primary' : 'bg-muted text-muted-foreground'}`} title={web ? 'Ordered on the website' : 'Entered in the admin'}>
       {web ? <Globe size={12} /> : <Smartphone size={12} />}
       {web ? 'Online' : 'Manual'}
     </span>

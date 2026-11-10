@@ -63,7 +63,7 @@ export function DriveBackup({ busy, run, onRestore }: { busy: boolean; run: (fn:
             ) : (
               <>
                 <div className="text-[15px] font-semibold">Keep a copy in your Google Drive</div>
-                <p className="mt-0.5 text-[13px] text-muted-foreground">Backups go to a “BoxBook Backups” folder in your own Drive. BoxBook can only see files it created there.</p>
+                <p className="mt-0.5 text-[13px] text-muted-foreground">Backups go to a “Honey Packers Backups” folder in your own Drive. The admin can only see files it created there.</p>
               </>
             )}
           </div>

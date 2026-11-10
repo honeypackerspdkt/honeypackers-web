@@ -1,5 +1,5 @@
 /**
- * Google Drive backup. Files go to a "BoxBook Backups" folder in the user's own Drive; the app only sees
+ * Google Drive backup. Files go to a "Honey Packers Backups" folder in the user's own Drive; the app only sees
  * files it created itself (scope drive.file), so nothing else in their Drive is readable.
  *
  * Sign-in:
@@ -16,7 +16,7 @@ import { normalize } from './storage';
 import type { AppData } from './types';
 
 const SCOPE = 'https://www.googleapis.com/auth/drive.file email';
-const FOLDER_NAME = 'BoxBook Backups';
+const FOLDER_NAME = 'Honey Packers Backups';
 const AUTH_KEY = 'boxbook-drive-auth';
 const FOLDER_KEY = 'boxbook-drive-folder';
 const GOOGLE_AUTH = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -347,13 +347,13 @@ export function multipartBody(meta: object, json: string, boundary: string): str
 
 const toFile = (f: { id: string; name: string; modifiedTime?: string; size?: string }): DriveFile => ({ id: f.id, name: f.name, modifiedTime: f.modifiedTime || '', size: Number(f.size) || 0 });
 
-/** Lists backups in the BoxBook Backups folder, newest first. */
+/** Lists backups in the Honey Packers Backups folder, newest first. */
 export async function listDriveBackups(interactive = true): Promise<DriveFile[]> {
   const token = await accessToken(interactive);
   const folder = await folderId(token);
   const r = await api<{ files: { id: string; name: string; modifiedTime: string; size: string }[] }>(
     token,
-    `${API}/files?${new URLSearchParams({ q: `'${folder}' in parents and trashed=false and name contains 'BoxBook-'`, orderBy: 'modifiedTime desc', pageSize: '100', fields: 'files(id,name,modifiedTime,size)' })}`,
+    `${API}/files?${new URLSearchParams({ q: `'${folder}' in parents and trashed=false and name contains 'HoneyPackers-'`, orderBy: 'modifiedTime desc', pageSize: '100', fields: 'files(id,name,modifiedTime,size)' })}`,
   );
   return r.files.map(toFile);
 }
@@ -381,7 +381,7 @@ export async function uploadDriveBackup(name: string, json: string, opts: { inte
 async function pruneDriveAuto(token: string, folder: string, keep: number) {
   const r = await api<{ files: { id: string }[] }>(
     token,
-    `${API}/files?${new URLSearchParams({ q: `'${folder}' in parents and trashed=false and name contains 'BoxBook-auto-'`, orderBy: 'name desc', pageSize: '200', fields: 'files(id)' })}`,
+    `${API}/files?${new URLSearchParams({ q: `'${folder}' in parents and trashed=false and name contains 'HoneyPackers-auto-'`, orderBy: 'name desc', pageSize: '200', fields: 'files(id)' })}`,
   );
   for (const f of r.files.slice(Math.max(1, keep))) await api<void>(token, `${API}/files/${f.id}`, { method: 'DELETE' });
 }
@@ -393,7 +393,7 @@ export async function downloadDriveBackup(id: string): Promise<AppData> {
   try {
     raw = typeof text === 'string' ? JSON.parse(text) : text;
   } catch {
-    throw new DriveError('That file in Drive is not a valid BoxBook backup');
+    throw new DriveError('That file in Drive is not a valid Honey Packers backup');
   }
   return normalize(raw);
 }
