@@ -1,6 +1,6 @@
 {
-  "name": "Honey Packers Admin",
-  "short_name": "HP Admin",
+  "name": "BoxBook",
+  "short_name": "BoxBook",
   "description": "Corrugated box calculator and order book.",
   "start_url": "./",
   "scope": "./",

@@ -43,7 +43,7 @@ const GROUPS: { title: string; items: Qa[] }[] = [
       },
       {
         q: 'CGST + SGST or IGST?',
-        a: 'The admin compares the state of your company with the customer’s state (taken from the GSTIN, or chosen in the customer’s details). Same state: CGST + SGST. Different state: IGST. Set the customer’s state if the GSTIN is missing.',
+        a: 'BoxBook compares the state of your company with the customer’s state (taken from the GSTIN, or chosen in the customer’s details). Same state: CGST + SGST. Different state: IGST. Set the customer’s state if the GSTIN is missing.',
       },
       {
         q: 'How are invoice numbers given?',
@@ -113,7 +113,7 @@ const GROUPS: { title: string; items: Qa[] }[] = [
       },
       {
         q: 'How do I restore?',
-        a: 'In Backup & restore pick a backup on the phone, choose “Restore from file”, or tap Restore under Google Drive. The admin shows what the backup contains and saves a safety copy of the current data first. Restoring replaces what is on the phone now.',
+        a: 'In Backup & restore pick a backup on the phone, choose “Restore from file”, or tap Restore under Google Drive. BoxBook shows what the backup contains and saves a safety copy of the current data first. Restoring replaces what is on the phone now.',
       },
       {
         q: 'I changed phone. What do I do?',
@@ -162,22 +162,22 @@ export function Help() {
               </div>
               <ul className="list-disc space-y-2 pl-5 text-muted-foreground">
                 <li>
-                  <b className="text-foreground">What the admin stores.</b> Your customers, orders, saved boxes, company profile (including bank details and logo) and settings, in the Honey Packers database (Supabase, India) with a working copy in this browser.
+                  <b className="text-foreground">What BoxBook stores.</b> Your customers, orders, saved boxes, company profile (including bank details and logo) and settings, in the Honey Packers database (Supabase, India) with a working copy in this browser.
                 </li>
                 <li>
-                  <b className="text-foreground">Staff only, no tracking.</b> Only people the owner invites can sign in, and each sees what their role allows. The admin has no analytics and no advertising.
+                  <b className="text-foreground">Staff only, no tracking.</b> Only people the owner invites can sign in, and each sees what their role allows. BoxBook has no analytics and no advertising.
                 </li>
                 <li>
-                  <b className="text-foreground">Google Drive (optional).</b> If you connect it, the admin asks Google for two permissions: to see and manage only the files the admin itself creates in your Drive (“drive.file”), and your e-mail address, to show which account is connected. Backup files go to a “Honey Packers Backups” folder in your own Drive and are read only by you and the admin. It cannot open any other file in your Drive. The sign-in token is kept on your device only.
+                  <b className="text-foreground">Google Drive (optional).</b> If you connect it, BoxBook asks Google for two permissions: to see and manage only the files BoxBook itself creates in your Drive (“drive.file”), and your e-mail address, to show which account is connected. Backup files go to a “Honey Packers Backups” folder in your own Drive and are read only by you and BoxBook. BoxBook cannot open any other file in your Drive. The sign-in token is kept on your device only.
                 </li>
                 <li>
                   <b className="text-foreground">Sharing is your choice.</b> Invoices, quotations and backups leave the device only when you press share, export or upload, and go where you send them (WhatsApp, e-mail, Drive…).
                 </li>
                 <li>
-                  <b className="text-foreground">Taking it back.</b> Tap Disconnect in Backup & restore to forget the Google account on this device, and remove its access any time at myaccount.google.com → Security → Third-party access. Delete the “Honey Packers Backups” folder in Drive to remove uploaded copies. Uninstalling the app removes the data stored inside it; backups you saved in Documents or exported yourself stay until you delete them.
+                  <b className="text-foreground">Taking it back.</b> Tap Disconnect in Backup & restore to forget the Google account on this device, and remove BoxBook’s access any time at myaccount.google.com → Security → Third-party access. Delete the “Honey Packers Backups” folder in Drive to remove uploaded copies. Uninstalling the app removes the data stored inside it; backups you saved in Documents or exported yourself stay until you delete them.
                 </li>
                 <li>
-                  <b className="text-foreground">Google’s rules.</b> The admin’s use of information received from Google APIs follows the Google API Services User Data Policy, including the Limited Use requirements.
+                  <b className="text-foreground">Google’s rules.</b> BoxBook’s use of information received from Google APIs follows the Google API Services User Data Policy, including the Limited Use requirements.
                 </li>
               </ul>
             </div>

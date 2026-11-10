@@ -68,7 +68,7 @@ export function Home() {
 
   return (
     <>
-      <Header title={settings.businessName || 'Honey Packers'} subtitle={greeting()} large />
+      <Header title={settings.businessName || 'BoxBook'} subtitle={greeting()} large />
       <Page>
         {p.inbox && box.count > 0 && (
           <button onClick={() => nav.push({ name: 'inbox' })} className="mb-3 flex w-full items-center gap-3 rounded-2xl bg-primary px-4 py-3 text-left text-primary-foreground">
@@ -123,7 +123,7 @@ export function Home() {
         </div>
 
         {!hasData && (
-          <Empty icon={<CheckCircle2 size={28} />} title="Welcome to Honey Packers Admin" text="Start by adding a customer or working out a box price in the calculator. Website orders appear under Orders." />
+          <Empty icon={<CheckCircle2 size={28} />} title="Welcome to BoxBook" text="Start by adding a customer or working out a box price in the calculator. Website orders appear under Orders." />
         )}
 
         <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-8">

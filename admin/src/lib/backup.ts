@@ -123,7 +123,7 @@ export async function exportBackup(data: AppData) {
     return;
   }
   const w = await Filesystem.writeFile({ path: name, directory: Directory.Cache, data: json, encoding: Encoding.UTF8 });
-  await Share.share({ title: 'Honey Packers backup', files: [w.uri], dialogTitle: 'Save or send backup' });
+  await Share.share({ title: 'BoxBook backup', files: [w.uri], dialogTitle: 'Save or send backup' });
 }
 
 export async function shareBackupEntry(entry: BackupEntry) {

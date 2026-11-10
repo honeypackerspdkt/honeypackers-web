@@ -84,7 +84,7 @@ export function DesktopNav() {
       <div className="flex items-center gap-3 px-5 pb-4 pt-6">
         <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="size-9 rounded-xl" />
         <div className="min-w-0">
-          <div className="truncate text-[17px] font-bold leading-tight">Honey Packers</div>
+          <div className="truncate text-[17px] font-bold leading-tight">BoxBook</div>
           {data.settings.businessName && <div className="truncate text-[12px] opacity-75">{data.settings.businessName}</div>}
         </div>
       </div>

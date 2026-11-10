@@ -56,6 +56,7 @@ Overall plan: `admin/docs/online-business-plan.md`. Site, admin (`admin/`), data
   Sign-in only: `admin/src/AdminGate.tsx` shows nothing of the app until a member of the business is signed in (e-mail link/code
   or SMS); non-members see "No access" (owner invites under More → Staff). Migration 10 lets the database hold one business only,
   so after the owner's first set-up nobody else can create one. What a member may change is decided by role (`lib/roles.ts`).
+- App name: the admin is called **BoxBook** everywhere users see it (sidebar, home-screen name `BoxBook`, page title, Help, Cloud sync, Drive text), owner's choice 10 Nov 2026. Business wording (company name, honeypackers.in, "Honey Packers database") stays Honey Packers. Backup files / folders keep the `HoneyPackers-*` / `Honey Packers Backups` names so backups already made still list.
 - Paper stock + App settings (ported from BoxBook on 10 Nov 2026; BoxBook's own CLAUDE.md describes the screens in detail):
   `admin/src/lib/stock.ts` (pure: paper need per grade from `layerGrams`, side-trim aware reel matching, automatic issue plan, low-stock / short-for-orders alerts),
   screens `Stock.tsx` (tiles | list, by grade | by reel size, add reels, ledger), `OrderPaper.tsx` ("Paper needed" on an order, Issue reels / Return) and `Settings.tsx`

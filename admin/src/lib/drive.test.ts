@@ -151,7 +151,7 @@ describe('Drive calls', () => {
     expect((await downloadDriveBackup('abc')).customers).toHaveLength(1);
     expect(calls[0].url).toContain('/files/abc?alt=media');
     mockFetch(json({ hello: 'world' }));
-    await expect(downloadDriveBackup('abc')).rejects.toThrow(/not a Honey Packers backup/);
+    await expect(downloadDriveBackup('abc')).rejects.toThrow(/not a BoxBook backup/);
   });
 
   it('asks to sign in again when Google rejects the token', async () => {

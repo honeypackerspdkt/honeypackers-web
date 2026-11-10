@@ -170,7 +170,7 @@ export function More() {
         </Section>
 
         <p className="px-2 text-center text-[12.5px] text-muted-foreground">
-          Honey Packers Admin keeps your data in the Honey Packers database; only staff you invite can sign in. You can also keep your own backup copies.
+          BoxBook keeps your data in the Honey Packers database; only staff you invite can sign in. You can also keep your own backup copies.
         </p>
       </Page>
     </>

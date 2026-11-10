@@ -25,7 +25,7 @@ export function CloudSync() {
 
   return (
     <>
-      <Header title="Cloud sync" subtitle={st.orgName || 'Honey Packers Admin'} back />
+      <Header title="Cloud sync" subtitle={st.orgName || 'BoxBook'} back />
       <Page>
         {st.phase === 'off' && <NotSetUp />}
         {st.phase === 'signed-out' && <SignIn run={run} busy={busy} />}

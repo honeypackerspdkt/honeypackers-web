@@ -393,7 +393,7 @@ export async function downloadDriveBackup(id: string): Promise<AppData> {
   try {
     raw = typeof text === 'string' ? JSON.parse(text) : text;
   } catch {
-    throw new DriveError('That file in Drive is not a valid Honey Packers backup');
+    throw new DriveError('That file in Drive is not a valid BoxBook backup');
   }
   return normalize(raw);
 }
