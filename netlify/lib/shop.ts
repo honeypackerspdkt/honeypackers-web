@@ -2,10 +2,10 @@
 // Prices and amounts are always worked out here (box-core), never taken from the browser.
 // Pure apart from the injected fetch, so it is tested with fake Supabase / Razorpay (tests/shop.test.ts).
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { advanceAmount, checkoutTotals, deliveryCharge, findZone, gradeLabel, priceCart, priceCustomBox, type CartLine, type WebShop } from '@honeypackers/box-core/pricing';
-import { defaultCompany } from '@honeypackers/box-core/company';
-import { cleanArtwork, printColours, printKindOf, printLabel } from '@honeypackers/box-core/artwork';
-import type { BoxSpec, PrintKind } from '@honeypackers/box-core/types';
+import { advanceAmount, checkoutTotals, deliveryCharge, findZone, gradeLabel, priceCart, priceCustomBox, type CartLine, type WebShop } from '../../packages/box-core/src/pricing';
+import { defaultCompany } from '../../packages/box-core/src/company';
+import { cleanArtwork, printColours, printKindOf, printLabel } from '../../packages/box-core/src/artwork';
+import type { BoxSpec, PrintKind } from '../../packages/box-core/src/types';
 import { orderView, ordersFromRows } from '../../src/lib/account';
 import { fromDb, type DeliveryZoneRow, type PriceRulesRow } from '../../src/lib/price-list';
 import { productFromRow } from '../../src/lib/products';

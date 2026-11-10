@@ -1,5 +1,5 @@
-import type { CartLine } from '@honeypackers/box-core/pricing';
-import type { Product } from '@honeypackers/box-core/types';
+import type { CartLine } from '../../packages/box-core/src/pricing';
+import type { Product } from '../../packages/box-core/src/types';
 import sample from '../data/sample-products.json';
 
 /** Standard boxes sold in packs: Supabase `products` rows (public) or the sample list, and the browser cart. */

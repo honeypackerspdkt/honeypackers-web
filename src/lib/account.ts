@@ -1,6 +1,6 @@
-import { orderTotals } from '@honeypackers/box-core/calc';
-import { defaultCompany } from '@honeypackers/box-core/company';
-import type { CompanySettings, Customer, Order, OrderStatus } from '@honeypackers/box-core/types';
+import { orderTotals } from '../../packages/box-core/src/calc';
+import { defaultCompany } from '../../packages/box-core/src/company';
+import type { CompanySettings, Customer, Order, OrderStatus } from '../../packages/box-core/src/types';
 
 /** Buyer account ("My orders"): database rows → display data. Pure, tested in tests/account.test.ts. */
 

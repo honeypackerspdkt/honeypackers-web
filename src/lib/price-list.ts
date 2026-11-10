@@ -1,4 +1,4 @@
-import { normalizeWebShop, type DeliveryZone, type WebShop } from '@honeypackers/box-core/pricing';
+import { normalizeWebShop, type DeliveryZone, type WebShop } from '../../packages/box-core/src/pricing';
 import sample from '../data/sample-price-list.json';
 
 /**
