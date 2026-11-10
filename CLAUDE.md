@@ -53,6 +53,10 @@ Overall plan: `admin/docs/online-business-plan.md`. Site, admin (`admin/`), data
   (`cd admin && npm test`, `npx tsc -b`). Built into `dist/admin/` by `scripts/build-admin.sh` (run by `netlify-build.sh`;
   `VITE_SUPABASE_*` default to the site's `PUBLIC_SUPABASE_*`, `VITE_SHOP_URL` to Netlify's `URL`). Served at `/admin/`, noindex.
   Database schema for Honey Packers: `admin/supabase/migrations` (applied to the honeypackerspdkt project). Its notes: `admin/docs`.
+  Every list page (Orders, Customers, Products, Saved boxes, Inbox, Staff, Paper stock, Box stock) uses `admin/src/list-page.tsx`
+  (owner's choice): ListPage (header + '+ Add' in the header on computers, round + button on phones), StatCards, AlertBox, Toolbar
+  (search + Chips + Tiles/List switch remembered per page via useLayout), TileGrid/Tile/AddTile. Tapping an item opens a full page
+  (enquiry, staff member, invite and box stock item are pages, not sheets).
   Sign-in only: `admin/src/AdminGate.tsx` shows nothing of the app until a member of the business is signed in (e-mail link/code
   or SMS); non-members see "No access" (owner invites under More → Staff). Migration 10 lets the database hold one business only,
   so after the owner's first set-up nobody else can create one. What a member may change is decided by role (`lib/roles.ts`).
