@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
-import { AlertTriangle, Calculator, CheckCircle2, ClipboardList, Inbox as InboxIcon, ShieldCheck, UserPlus } from 'lucide-react';
+import { AlertTriangle, Calculator, CheckCircle2, ClipboardList, Inbox as InboxIcon, Layers, ShieldCheck, UserPlus } from 'lucide-react';
 import { usePerms, useStore } from '../store';
 import { inbox } from '../lib/inbox';
 import { useNav } from '../nav';
 import { isOpen, orderTotals } from '@honeypackers/box-core/calc';
 import { addDays, fmtDate, money0, relDays, timeAgo, todayISO } from '../lib/format';
+import { stockAlerts } from '../lib/stock';
 import { Empty, Header, List, Page, Row, Section, Stat, StatusChip } from '../ui';
 
 function greeting() {
@@ -51,6 +52,11 @@ export function Home() {
     };
   }, [data.orders]);
 
+  const paper = useMemo(
+    () => stockAlerts(data.reels, data.stockMoves, data.orders, settings.stockMin, settings.stockWastePct),
+    [data.reels, data.stockMoves, data.orders, settings.stockMin, settings.stockWastePct],
+  );
+  const paperCount = p.stock ? paper.low.length + paper.short.length : 0;
   const backupStale = !settings.lastBackupAt || Date.now() - new Date(settings.lastBackupAt).getTime() > 3 * 86400000;
   const hasData = data.customers.length + data.orders.length + data.boxes.length > 0;
 
@@ -89,6 +95,19 @@ export function Home() {
           </span>
           <span className="text-[13px] font-semibold">Open</span>
         </button>
+
+        {paperCount > 0 && (
+          <button onClick={() => nav.push({ name: 'stock' })} className="mb-5 flex w-full items-center gap-3 rounded-2xl bg-bad/10 px-4 py-3 text-left text-bad">
+            <Layers size={20} />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[14px] font-semibold">{paperCount === 1 ? '1 paper grade needs buying' : `${paperCount} paper grades need buying`}</span>
+              <span className="block truncate text-[12px] opacity-80">
+                {[...paper.low.map((l) => `${l.bf} BF ${l.gsm} GSM`), ...paper.short.map((x) => `${x.bf} BF ${x.gsm} GSM`)].join(' · ')}
+              </span>
+            </span>
+            <span className="text-[13px] font-semibold">Open</span>
+          </button>
+        )}
 
         <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Stat label="Active orders" value={String(s.active)} sub={s.active ? 'confirmed → ready' : 'none right now'} tone="kraft" />

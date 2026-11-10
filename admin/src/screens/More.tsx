@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { Box, Building2, Calculator, CircleHelp, Cloud, DatabaseBackup, Globe, Inbox as InboxIcon, Package, Plus, UserCog } from 'lucide-react';
+import { Box, CircleHelp, Cloud, DatabaseBackup, Globe, Inbox as InboxIcon, Layers, Package, Plus, Settings2, UserCog } from 'lucide-react';
 import { setupProblems } from '@honeypackers/box-core/pricing';
 import { usePerms, useStore } from '../store';
 import { useNav } from '../nav';
 import { specLabel } from '@honeypackers/box-core/calc';
+import { stockAlerts, stockByGrade } from '../lib/stock';
 import { timeAgo } from '../lib/format';
-import type { AppData, Settings } from '../lib/types';
+import type { AppData } from '../lib/types';
 import type { CloudStatus } from '../lib/cloud/controller';
 import { inbox } from '../lib/inbox';
-import { Empty, Field, Header, List, NumInput, Page, Row, Section, Segmented, Fab } from '../ui';
+import { Empty, Header, List, Page, Row, Section, Fab } from '../ui';
 
 function webSummary(w: AppData['web']): string {
   const left = setupProblems(w.rules).length;
@@ -30,10 +30,19 @@ function cloudSummary(s: CloudStatus): string {
   }
 }
 
+const stockSub = (d: AppData) => {
+  const g = stockByGrade(d.reels, d.stockMoves);
+  if (!g.length) return 'Reels, issue to orders';
+  const kg = g.reduce((s, x) => s + x.kg, 0);
+  const a = stockAlerts(d.reels, d.stockMoves, d.orders, d.settings.stockMin, d.settings.stockWastePct);
+  const n = a.low.length + a.short.length;
+  return `${Math.round(kg).toLocaleString('en-IN')} kg · ${g.reduce((x, y) => x + y.reels.length, 0)} reels${n ? ` · ${n} to buy` : ''}`;
+};
+
 const iconCls = 'grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary';
 
 export function More() {
-  const { data, updateSettings, cloudStatus } = useStore();
+  const { data, cloudStatus } = useStore();
   const p = usePerms();
   const inboxCount = inbox(data).count;
   const nav = useNav();
@@ -44,6 +53,16 @@ export function More() {
       <Page>
         <Section>
           <List>
+            <Row
+              onClick={() => nav.push({ name: 'settings' })}
+              icon={
+                <span className={iconCls}>
+                  <Settings2 size={20} />
+                </span>
+              }
+              title="App settings"
+              sub={p.ownerSettings ? settings.businessName || 'Company, invoice, pricing, paper stock, backup' : 'Backup and appearance'}
+            />
             {p.inbox && (
               <Row
                 onClick={() => nav.push({ name: 'inbox' })}
@@ -69,28 +88,16 @@ export function More() {
                 sub={`${data.boxes.length} saved`}
               />
             )}
-            {p.ownerSettings && (
+            {p.stock && (
               <Row
-                onClick={() => nav.push({ name: 'company' })}
+                onClick={() => nav.push({ name: 'stock' })}
                 icon={
                   <span className={iconCls}>
-                    <Building2 size={20} />
+                    <Layers size={20} />
                   </span>
                 }
-                title="Company profile"
-                sub={settings.businessName || 'Name, logo, GSTIN, bank — for invoices'}
-              />
-            )}
-            {p.ownerSettings && (
-              <Row
-                onClick={() => nav.push({ name: 'business' })}
-                icon={
-                  <span className={iconCls}>
-                    <Calculator size={20} />
-                  </span>
-                }
-                title="Pricing defaults"
-                sub={`Profit ${settings.defaults.profitPct}% · GST ${settings.defaults.taxPct}% · ${settings.currency}`}
+                title="Paper stock"
+                sub={stockSub(data)}
               />
             )}
             {p.ownerSettings && (
@@ -162,20 +169,6 @@ export function More() {
           </List>
         </Section>
 
-        <Section title="Appearance">
-          <div className="card p-4">
-            <Segmented<Settings['theme']>
-              value={settings.theme}
-              onChange={(theme) => updateSettings({ theme })}
-              options={[
-                { value: 'system', label: 'System' },
-                { value: 'light', label: 'Light' },
-                { value: 'dark', label: 'Dark' },
-              ]}
-            />
-          </div>
-        </Section>
-
         <p className="px-2 text-center text-[12.5px] text-muted-foreground">
           Honey Packers Admin keeps your data in the Honey Packers database; only staff you invite can sign in. You can also keep your own backup copies.
         </p>
@@ -219,59 +212,6 @@ export function BoxesList() {
         )}
       </Page>
       {list.length > 0 && <Fab label="Box" icon={<Plus size={20} />} onClick={() => nav.push({ name: 'box' })} />}
-    </>
-  );
-}
-
-export function Business() {
-  const { data, updateSettings, toast } = useStore();
-  const nav = useNav();
-  const [s, setS] = useState<Settings>(data.settings);
-  const text = (k: 'currency') => (e: { target: { value: string } }) => setS({ ...s, [k]: e.target.value });
-  const setDef = (k: keyof Settings['defaults'], v: number) => setS({ ...s, defaults: { ...s.defaults, [k]: v } });
-
-  const save = () => {
-    updateSettings({
-      currency: s.currency.trim() || '₹',
-      defaults: s.defaults,
-    });
-    toast('Pricing defaults saved');
-    nav.back();
-  };
-
-  return (
-    <>
-      <Header title="Pricing defaults" back />
-      <Page>
-        <Section title="Currency">
-          <div className="card p-4">
-            <Field label="Currency symbol">
-              <input className="input" value={s.currency} onChange={text('currency')} maxLength={4} />
-            </Field>
-          </div>
-        </Section>
-
-        <Section title="Default pricing">
-          <div className="card p-4">
-            <div className="grid grid-cols-3 gap-3">
-              <Field label="Overhead">
-                <NumInput value={s.defaults.overhead} onValue={(v) => setDef('overhead', v)} suffix={s.currency} />
-              </Field>
-              <Field label="Profit">
-                <NumInput value={s.defaults.profitPct} onValue={(v) => setDef('profitPct', v)} suffix="%" />
-              </Field>
-              <Field label="GST">
-                <NumInput value={s.defaults.taxPct} onValue={(v) => setDef('taxPct', v)} suffix="%" />
-              </Field>
-            </div>
-            <p className="mt-3 text-[12.5px] text-muted-foreground">Used as the starting values in the calculator and for new orders.</p>
-          </div>
-        </Section>
-
-        <button className="btn-primary w-full" onClick={save}>
-          Save
-        </button>
-      </Page>
     </>
   );
 }

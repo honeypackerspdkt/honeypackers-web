@@ -1,14 +1,14 @@
 import type { DeliveryZone, WebShop } from '@honeypackers/box-core/pricing';
 import { normalizeWebShop } from '@honeypackers/box-core/pricing';
-import type { AppData, Customer, Enquiry, Order, OrderItem, Payment, Product, SavedBox, Settings } from '../types';
+import type { AppData, Customer, Enquiry, Order, OrderItem, Payment, Product, Reel, SavedBox, Settings, StockMove } from '../types';
 
 /**
  * App records ↔ Supabase rows (supabase/migrations). Rows use the database column names and leave out
  * org_id / rev / updated_at / updated_by: the sync engine adds and reads those.
  */
-export type Table = 'customers' | 'boxes' | 'products' | 'orders' | 'order_items' | 'payments' | 'delivery_zones' | 'enquiries';
+export type Table = 'customers' | 'boxes' | 'products' | 'orders' | 'order_items' | 'payments' | 'delivery_zones' | 'enquiries' | 'reels' | 'stock_moves';
 /** Push order: parents before children (foreign keys). */
-export const TABLES: Table[] = ['customers', 'boxes', 'products', 'orders', 'order_items', 'payments', 'delivery_zones', 'enquiries'];
+export const TABLES: Table[] = ['customers', 'boxes', 'products', 'orders', 'order_items', 'payments', 'delivery_zones', 'enquiries', 'reels', 'stock_moves'];
 
 export type Row = { id: string } & Record<string, unknown>;
 export interface Entry {
@@ -127,6 +127,32 @@ export const productRow = (p: Product): Row => ({
 /** Only the status is changed in the app; the rest comes from the website. */
 export const enquiryRow = (e: Enquiry): Row => ({ id: e.id, status: e.status });
 
+export const reelRow = (r: Reel): Row => ({
+  id: r.id,
+  number: r.number || '',
+  bf: r.bf || 0,
+  gsm: r.gsm || 0,
+  width: r.width || 0,
+  supplier: r.supplier || '',
+  received_at: r.receivedAt || null,
+  weight_in: r.weightIn || 0,
+  rate: r.rate || 0,
+  note: r.note || '',
+  created_at: r.createdAt || null,
+});
+
+export const moveRow = (m: StockMove): Row => ({
+  id: m.id,
+  reel_id: m.reelId,
+  date: m.date,
+  kind: m.kind,
+  kg: m.kg || 0,
+  order_id: m.orderId || null,
+  order_no: m.orderNo || '',
+  note: m.note || '',
+  created_at: m.createdAt || m.date || null,
+});
+
 /** Every syncable row in the app data, by key. */
 export function rowsOf(d: AppData): Map<string, Entry> {
   const out = new Map<string, Entry>();
@@ -141,6 +167,8 @@ export function rowsOf(d: AppData): Map<string, Entry> {
   d.web.zones.forEach((z, i) => z.id && put('delivery_zones', zoneRow(z, i)));
   (d.enquiries || []).forEach((e) => put('enquiries', enquiryRow(e)));
   (d.products || []).forEach((p) => put('products', productRow(p)));
+  (d.reels || []).forEach((r) => put('reels', reelRow(r)));
+  (d.stockMoves || []).forEach((m) => put('stock_moves', moveRow(m)));
   return out;
 }
 
@@ -288,6 +316,45 @@ export function applyRow(d: AppData, table: string, row: Row): AppData {
       };
       return { ...d, enquiries: prev ? list.map((x) => (x.id === id ? e : x)) : [e, ...list] };
     }
+    case 'reels': {
+      const list = d.reels || [];
+      if (deleted) return { ...d, reels: list.filter((r) => r.id !== id) };
+      const prev = list.find((r) => r.id === id);
+      const r: Reel = {
+        id,
+        number: str(row.number),
+        bf: num(row.bf),
+        gsm: num(row.gsm),
+        width: num(row.width),
+        supplier: str(row.supplier),
+        receivedAt: str(row.received_at).slice(0, 10),
+        weightIn: num(row.weight_in),
+        rate: num(row.rate),
+        note: str(row.note),
+        createdAt: prev?.createdAt || iso(row.created_at),
+        updatedAt: iso(row.updated_at),
+      };
+      return { ...d, reels: prev ? list.map((x) => (x.id === id ? r : x)) : [r, ...list] };
+    }
+    case 'stock_moves': {
+      const list = d.stockMoves || [];
+      if (deleted) return { ...d, stockMoves: list.filter((m) => m.id !== id) };
+      const prev = list.find((m) => m.id === id);
+      const kind = str(row.kind);
+      const m: StockMove = {
+        id,
+        reelId: str(row.reel_id),
+        date: iso(row.date),
+        kind: (['issue', 'return', 'waste', 'adjust'].includes(kind) ? kind : 'adjust') as StockMove['kind'],
+        kg: num(row.kg),
+        ...(row.order_id ? { orderId: str(row.order_id) } : {}),
+        ...(row.order_no ? { orderNo: str(row.order_no) } : {}),
+        note: str(row.note),
+        createdAt: prev?.createdAt || iso(row.created_at),
+        updatedAt: iso(row.updated_at),
+      };
+      return { ...d, stockMoves: prev ? list.map((x) => (x.id === id ? m : x)) : [m, ...list] };
+    }
     case 'delivery_zones': {
       const zones = d.web.zones.filter((z) => z.id !== id);
       if (deleted) return { ...d, web: { ...d.web, zones } };
@@ -338,6 +405,11 @@ export function settingsRow(s: Settings): Record<string, unknown> {
   const r: Record<string, unknown> = {};
   for (const [k, col] of COMPANY) r[col] = s[k] ?? '';
   r.pricing_defaults = s.defaults;
+  r.stock_waste_pct = s.stockWastePct ?? 5;
+  r.auto_issue = s.autoIssue !== false;
+  r.stock_min = s.stockMin || {};
+  r.reel_widths = s.reelWidths || [];
+  r.pay_modes = s.payModes || [];
   return r;
 }
 
@@ -345,6 +417,11 @@ export function applySettingsRow(s: Settings, row: Record<string, unknown>): Set
   const next: Settings = { ...s };
   for (const [k, col] of COMPANY) if (col in row) (next as unknown as Record<string, unknown>)[k] = str(row[col]);
   if (row.pricing_defaults && typeof row.pricing_defaults === 'object') next.defaults = { ...s.defaults, ...(row.pricing_defaults as Settings['defaults']) };
+  if (row.stock_waste_pct != null) next.stockWastePct = num(row.stock_waste_pct);
+  if (row.auto_issue != null) next.autoIssue = row.auto_issue !== false;
+  if (row.stock_min && typeof row.stock_min === 'object' && !Array.isArray(row.stock_min)) next.stockMin = row.stock_min as Settings['stockMin'];
+  if (Array.isArray(row.reel_widths)) next.reelWidths = (row.reel_widths as unknown[]).map(Number).filter((n) => n > 0);
+  if (Array.isArray(row.pay_modes) && row.pay_modes.length) next.payModes = (row.pay_modes as unknown[]).map(String);
   return next;
 }
 

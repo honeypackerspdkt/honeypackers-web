@@ -12,6 +12,7 @@ import { shareFile } from '../lib/sharefile';
 import type { InvoiceMeta, Order, OrderItem, OrderStatus } from '../lib/types';
 import { Confirm, Empty, Fab, Field, Header, IconBtn, List, NumInput, Page, Row, SearchBox, Section, Sheet, STATUS, STATUS_FLOW, StatusChip } from '../ui';
 import { Missing } from './Customers';
+import { OrderPaper } from './OrderPaper';
 
 type Filter = 'all' | 'active' | OrderStatus;
 
@@ -25,8 +26,6 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: 'delivered', label: 'Delivered' },
   { value: 'cancelled', label: 'Cancelled' },
 ];
-
-const PAY_MODES = ['Cash', 'UPI', 'Bank transfer', 'Cheque', 'Other'];
 
 /** Where an order came from: online (website) or manual (made in the app). */
 type Source = 'any' | 'web' | 'app';
@@ -225,7 +224,7 @@ export function OrdersList() {
 }
 
 export function OrderDetail({ id }: { id: string }) {
-  const { data, upsertOrder, updateSettings, deleteOrder, toast, cloud, markInboxSeen } = useStore();
+  const { data, upsertOrder, updateSettings, deleteOrder, autoIssue, toast, cloud, markInboxSeen } = useStore();
   const p = usePerms();
   const isNewWebOrder = !!data.orders.find((x) => x.id === id && x.source === 'web') && !(data.settings.inboxSeen || []).includes(id);
   useEffect(() => {
@@ -251,7 +250,8 @@ export function OrderDetail({ id }: { id: string }) {
     if (!canMove(s)) return;
     if (p.editOrders) {
       upsertOrder({ ...o, status: s });
-      toast(`Marked ${STATUS[s].label.toLowerCase()}`);
+      const paper = p.stock ? autoIssue({ ...o, status: s }) : '';
+      toast(`Marked ${STATUS[s].label.toLowerCase()}${paper ? `. ${paper}` : ''}`);
       return;
     }
     // Production / dispatch: through the server, which checks the step is allowed for the role.
@@ -295,7 +295,7 @@ export function OrderDetail({ id }: { id: string }) {
     const s = data.settings;
     if (!s.businessName.trim()) {
       toast('Fill in your company profile first');
-      nav.push({ name: 'company' });
+      nav.push({ name: 'settings', section: 'company' });
       return;
     }
     if (o.items.length === 0) {
@@ -470,6 +470,8 @@ export function OrderDetail({ id }: { id: string }) {
 
         {o.artwork && o.artwork.elements?.length > 0 && <ArtworkCard o={o} />}
 
+        {p.stock && <OrderPaper order={o} />}
+
         </div>
         <div>
         {p.money && (
@@ -587,11 +589,12 @@ export function OrderDetail({ id }: { id: string }) {
 }
 
 function PaymentSheet({ open, onClose, order }: { open: boolean; onClose: () => void; order: Order }) {
-  const { upsertOrder, toast } = useStore();
+  const { data, upsertOrder, toast } = useStore();
+  const modes = data.settings.payModes?.length ? data.settings.payModes : ['Cash'];
   const balance = Math.max(0, Math.round(orderTotals(order).balance * 100) / 100);
   const [amount, setAmount] = useState(0);
   const [date, setDate] = useState(todayISO());
-  const [mode, setMode] = useState(PAY_MODES[0]);
+  const [mode, setMode] = useState(modes[0]);
   const [note, setNote] = useState('');
 
   // Start each time the sheet opens with the full balance filled in.
@@ -601,7 +604,7 @@ function PaymentSheet({ open, onClose, order }: { open: boolean; onClose: () => 
     if (open) {
       setAmount(balance);
       setDate(todayISO());
-      setMode(PAY_MODES[0]);
+      setMode(modes[0]);
       setNote('');
     }
   }
@@ -629,7 +632,7 @@ function PaymentSheet({ open, onClose, order }: { open: boolean; onClose: () => 
           </Field>
           <Field label="Mode">
             <select className="input" value={mode} onChange={(e) => setMode(e.target.value)}>
-              {PAY_MODES.map((m) => (
+              {modes.map((m) => (
                 <option key={m}>{m}</option>
               ))}
             </select>
@@ -647,7 +650,7 @@ function PaymentSheet({ open, onClose, order }: { open: boolean; onClose: () => 
 }
 
 export function OrderEdit({ id, customerId: initialCustomer, prefill }: { id?: string; customerId?: string; prefill?: OrderItem }) {
-  const { data, upsertOrder, upsertCustomer, toast } = useStore();
+  const { data, upsertOrder, upsertCustomer, autoIssue, toast } = useStore();
   const nav = useNav();
   const existing = id ? data.orders.find((o) => o.id === id) : undefined;
   const cur = data.settings.currency;
@@ -709,7 +712,8 @@ export function OrderEdit({ id, customerId: initialCustomer, prefill }: { id?: s
       invoiceNo: invoiceNo.trim() || undefined,
       invoice: Object.fromEntries(Object.entries(inv).filter(([, v]) => (v || '').trim())) as InvoiceMeta,
     });
-    toast(existing ? 'Order updated' : `${rec.number} created`);
+    const paper = autoIssue(rec);
+    toast(`${existing ? 'Order updated' : `${rec.number} created`}${paper ? `. ${paper}` : ''}`);
     if (existing) nav.back();
     else nav.replace({ name: 'order', id: rec.id });
   };

@@ -47,13 +47,23 @@ Overall plan: `admin/docs/online-business-plan.md`. Site, admin (`admin/`), data
 - Enquiries: Netlify Forms + `netlify/functions/submission-created.mts` (`netlify/lib/enquiry.ts`) → Supabase `enquiries` → admin Inbox.
 - `src/site.ts`: business details from `PUBLIC_*` env vars, nav. `src/styles/brand.css`: brand colours (override hub token variables only) + site components.
 - Admin: `admin/` is Honey Packers' own copy of the BoxBook app (copied 9 Nov 2026; BoxBook is now a separate product with
-  its own repo and database, deployed later; changes there do not reach this repo). React 19 + Vite, own package.json and tests
+  its own repo and database, deployed later; changes there do not reach this repo unless ported by hand, as the paper stock + App settings were on 10 Nov 2026). React 19 + Vite, own package.json and tests
   (`cd admin && npm test`, `npx tsc -b`). Built into `dist/admin/` by `scripts/build-admin.sh` (run by `netlify-build.sh`;
   `VITE_SUPABASE_*` default to the site's `PUBLIC_SUPABASE_*`, `VITE_SHOP_URL` to Netlify's `URL`). Served at `/admin/`, noindex.
   Database schema for Honey Packers: `admin/supabase/migrations` (applied to the honeypackerspdkt project). Its notes: `admin/docs`.
   Sign-in only: `admin/src/AdminGate.tsx` shows nothing of the app until a member of the business is signed in (e-mail link/code
   or SMS); non-members see "No access" (owner invites under More → Staff). Migration 10 lets the database hold one business only,
   so after the owner's first set-up nobody else can create one. What a member may change is decided by role (`lib/roles.ts`).
+- Paper stock + App settings (ported from BoxBook on 10 Nov 2026; BoxBook's own CLAUDE.md describes the screens in detail):
+  `admin/src/lib/stock.ts` (pure: paper need per grade from `layerGrams`, side-trim aware reel matching, automatic issue plan, low-stock / short-for-orders alerts),
+  screens `Stock.tsx` (tiles | list, by grade | by reel size, add reels, ledger), `OrderPaper.tsx` ("Paper needed" on an order, Issue reels / Return) and `Settings.tsx`
+  (**App settings**: Business, Invoice & bank, Pricing, Paper stock, Lists (payment methods), Backup, Appearance; one page per section on a phone, tabs on a computer; Save bar for typed fields;
+  owner-only sections are hidden for other roles). It replaces the old Company / Pricing defaults screens. `nav.tsx` has `goBack()` and a swipe-in-from-the-left-edge back gesture.
+  Types `Reel`, `StockMove` and the paper-rule settings (`stockWastePct`, `autoIssue`, `stockMin`, `reelWidths`, `payModes`) are in `packages/box-core` (`types.ts`, `company.ts`; `layerGrams` in `calc.ts`).
+  **Cloud sync**: tables `reels` and `stock_moves` (migration `20261110000012_paper_stock.sql`, which also adds the five settings columns to `org_settings` and teaches `sync_push` / `sync_pull` the new tables);
+  `cloud/mapping.ts` maps them, `roles.ts` has `stock` (Administrator, Sales, Accounts; not Production or Dispatch, because reel rates are costs). Auto-issue runs when an office user confirms or edits an order.
+  **Migration 12 is written and tested (rolled-back run on a scratch copy: RLS, sync functions, settings) but NOT yet applied to the live project `gvsjdrsydgbkdxrgmlmb`** (the Supabase connector in Claude Code only reaches
+  the older `wungbckyjamjwbxrfkle` project; apply it from the Supabase SQL editor or `supabase db push`). Until then, sync of stock would be refused by the database (the app keeps the changes queued).
 - Box maths: `packages/box-core` (`@honeypackers/box-core`, linked `file:./packages/box-core`; the admin links `file:../packages/box-core`).
   Its tests run with the site's `npm test` (vitest.config.ts).
   Supabase project "honeypackerspdkt's Project" (ref `gvsjdrsydgbkdxrgmlmb`, Mumbai, org honeypackerspdkt) holds the migrations 01–09 in `admin/supabase/migrations` (the earlier `wungbckyjamjwbxrfkle` project in Paavai-Embroidery is no longer used).

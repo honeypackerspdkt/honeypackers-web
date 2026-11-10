@@ -11,8 +11,9 @@ import { Home } from './screens/Home';
 import { OrderDetail, OrderEdit, OrdersList } from './screens/Orders';
 import { CustomerDetail, CustomerEdit, CustomersList } from './screens/Customers';
 import { Calculator } from './screens/Calculator';
-import { BoxesList, Business, More } from './screens/More';
-import { Company } from './screens/Company';
+import { BoxesList, More } from './screens/More';
+import { SettingsPage } from './screens/Settings';
+import { ReelDetail, ReelEdit, StockList } from './screens/Stock';
 import { WebPrices } from './screens/WebPrices';
 import { CloudSync } from './screens/Cloud';
 import { Team } from './screens/Team';
@@ -63,10 +64,14 @@ function renderRoute(r: Route) {
       return <BoxesList />;
     case 'backup':
       return <Backup />;
-    case 'business':
-      return <Business />;
-    case 'company':
-      return <Company />;
+    case 'settings':
+      return <SettingsPage section={r.section} />;
+    case 'stock':
+      return <StockList />;
+    case 'reel':
+      return <ReelDetail id={r.id} />;
+    case 'reelEdit':
+      return <ReelEdit id={r.id} width={r.width} bf={r.bf} gsm={r.gsm} />;
     case 'webPrices':
       return <WebPrices />;
     case 'cloud':

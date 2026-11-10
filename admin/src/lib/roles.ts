@@ -25,9 +25,11 @@ export interface Perms {
   team: boolean;
   /** Website orders and enquiries inbox. */
   inbox: boolean;
+  /** Paper reels: stock, issuing paper to orders (reel rates are costs, so not for Production / Dispatch). */
+  stock: boolean;
 }
 
-const ALL: Perms = { money: true, customers: true, editOrders: true, ownerSettings: true, team: true, inbox: true };
+const ALL: Perms = { money: true, customers: true, editOrders: true, ownerSettings: true, team: true, inbox: true, stock: true };
 
 export function perms(role: string): Perms {
   switch (role as Role) {
@@ -38,9 +40,9 @@ export function perms(role: string): Perms {
       return { ...ALL, ownerSettings: false, team: false };
     case 'Production':
     case 'Dispatch':
-      return { money: false, customers: false, editOrders: false, ownerSettings: false, team: false, inbox: false };
+      return { money: false, customers: false, editOrders: false, ownerSettings: false, team: false, inbox: false, stock: false };
     default:
-      return { money: false, customers: false, editOrders: false, ownerSettings: false, team: false, inbox: false };
+      return { money: false, customers: false, editOrders: false, ownerSettings: false, team: false, inbox: false, stock: false };
   }
 }
 
