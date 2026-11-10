@@ -3,6 +3,7 @@ import type { Product } from '@honeypackers/box-core/types';
 import { catalog, priceList } from '../lib/catalog';
 import { readCart, writeCart } from '../lib/products';
 import { mobile10 } from '../lib/account';
+import { addressProblem, composeAddress, fillAddressFields, parseAddress, readAddressFields } from '../lib/address';
 import { bindSignInForm, codeHint, targetLabel } from '../lib/signin-form';
 import type { SignInTarget } from '../lib/account-api';
 import { icon } from '../lib/icons';
@@ -21,7 +22,7 @@ export async function initCheckout(root: HTMLElement) {
   const $ = <T extends Element = HTMLElement>(s: string) => root.querySelector<T>(s)!;
   const live = Boolean(root.dataset.live);
   const pin = $<HTMLInputElement>('[name=pincode]');
-  const addr = $<HTMLTextAreaElement>('[name=address]');
+  const address = () => readAddressFields(root);
   const err = (t: string) => {
     $('[data-err]').textContent = t;
     $('[data-err]').hidden = !t;
@@ -94,19 +95,21 @@ export async function initCheckout(root: HTMLElement) {
         ? 'Fix the items above first.'
         : delivery == null
           ? 'Enter a pincode we deliver to.'
+          : addressProblem(address())
+            ? addressProblem(address())
           : min > 0 && priced.goods < min
             ? `Minimum online order is ₹${min} before GST.`
             : !signedIn
               ? 'Sign in with WhatsApp or e-mail (step 3).'
               : !detailsOk()
-                ? byEmail ? 'Add your name, mobile number and delivery address.' : 'Add your name and delivery address.'
+                ? byEmail ? 'Add your name and a mobile number for delivery.' : 'Add your name.'
                 : '';
     $<HTMLButtonElement>('[data-pay]').disabled = !!why;
     $('[data-pay-why]').textContent = why;
   }
 
   const field = (n: string) => root.querySelector<HTMLInputElement | HTMLSelectElement>(`[name=${n}]`)!;
-  const detailsOk = () => field('name').value.trim() !== '' && addr.value.trim() !== '' && (!byEmail || mobile10(field('phone').value) !== '') && (!field('gstin').value.trim() || GSTIN.test(field('gstin').value.trim().toUpperCase()));
+  const detailsOk = () => field('name').value.trim() !== '' && addressProblem(address()) === '' && (!byEmail || mobile10(field('phone').value) !== '') && (!field('gstin').value.trim() || GSTIN.test(field('gstin').value.trim().toUpperCase()));
 
   function showStep(which: 'off' | 'phone' | 'code' | 'details') {
     for (const k of ['off', 'phone', 'code', 'details']) $(`[data-${k}]`).hidden = k !== which;
@@ -127,7 +130,7 @@ export async function initCheckout(root: HTMLElement) {
     if (!field('gstin').value) field('gstin').value = me.gstin;
     if (!field('email').value) field('email').value = me.email;
     if (!field('stateCode').value && me.stateCode) field('stateCode').value = me.stateCode;
-    if (!addr.value) addr.value = me.address;
+    fillAddressFields(root, parseAddress(me.address, me.stateCode));
     showStep('details');
     render();
   }
@@ -152,7 +155,8 @@ export async function initCheckout(root: HTMLElement) {
     render();
   });
   root.addEventListener('input', (e) => (e.target as HTMLElement).closest('[data-details]') && render());
-  addr.addEventListener('input', render);
+  $('[data-address]').addEventListener('input', render);
+  $('[data-address]').addEventListener('change', render);
 
   const phoneForm = $<HTMLFormElement>('[data-phone]');
   const codeForm = $<HTMLFormElement>('[data-code]');
@@ -199,7 +203,7 @@ export async function initCheckout(root: HTMLElement) {
     try {
       const a = await getApi();
       const gstin = field('gstin').value.trim().toUpperCase();
-      await a.link({ name: field('name').value.trim(), company: field('company').value.trim(), gstin, stateCode: field('stateCode').value || (gstin ? gstin.slice(0, 2) : ''), address: addr.value.trim(), email: field('email').value.trim(), ...(byEmail ? { phone: mobile10(field('phone').value) } : {}) });
+      await a.link({ name: field('name').value.trim(), company: field('company').value.trim(), gstin, stateCode: field('stateCode').value || (gstin ? gstin.slice(0, 2) : ''), address: composeAddress(address()), email: field('email').value.trim(), ...(byEmail ? { phone: mobile10(field('phone').value) } : {}) });
       const token = await a.accessToken();
       if (!token) throw new Error('Your sign-in has expired. Please sign in again.');
       const { callFn, pay } = await import('../lib/pay');

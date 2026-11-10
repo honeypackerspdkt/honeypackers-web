@@ -2,6 +2,7 @@ import type { Customer, Order } from '@honeypackers/box-core/types';
 import { invoiceCompany, mobile10, orderView, reorderLink, reorderText } from '../lib/account';
 import * as api from '../lib/account-api';
 import { bindSignInForm, codeHint, targetLabel } from '../lib/signin-form';
+import { addressProblem, composeAddress, fillAddressFields, parseAddress, readAddressFields } from '../lib/address';
 import { callFn, pay, type CheckoutStart } from '../lib/pay';
 
 const inr = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -94,8 +95,7 @@ export async function initAccount(root: HTMLElement) {
     set('name', c.name);
     set('company', c.company);
     set('gstin', c.gstin);
-    set('stateCode', c.stateCode || '');
-    set('address', c.address);
+    fillAddressFields(profileForm, parseAddress(c.address, c.stateCode || ''), true);
     set('email', c.email);
     set('phone', byEmail ? c.phone.replace(/\D/g, '').slice(-10) : '');
     (profileForm.querySelector('[data-need-phone]') as HTMLElement).hidden = !byEmail;
@@ -115,13 +115,17 @@ export async function initAccount(root: HTMLElement) {
     const v = (k: string) => String(f.get(k) || '').trim();
     if (!v('name')) return setError(profileForm, 'Please enter your name.');
     const phone = byEmail ? mobile10(v('phone')) : '';
+    const parts = readAddressFields(profileForm);
+    // the address is optional here, but once started it must be complete (checkout needs all of it)
+    const started = [parts.line1, parts.line2, parts.landmark, parts.city, parts.pincode].some((x) => x.trim());
+    if (started && addressProblem(parts)) return setError(profileForm, addressProblem(parts));
     if (byEmail && !phone) return setError(profileForm, 'Please enter a 10-digit mobile number for delivery.');
     const gstin = v('gstin').toUpperCase();
     if (gstin && !/^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(gstin)) return setError(profileForm, 'That GSTIN does not look right (15 characters, e.g. 33ABCDE1234F1Z5).');
     setError(profileForm, '');
     busy(profileForm, true);
     try {
-      me = await api.link({ name: v('name'), company: v('company'), gstin, stateCode: v('stateCode') || (gstin ? gstin.slice(0, 2) : ''), address: v('address'), email: v('email'), ...(phone ? { phone } : {}) });
+      me = await api.link({ name: v('name'), company: v('company'), gstin, stateCode: v('stateCode') || (gstin ? gstin.slice(0, 2) : ''), address: started ? composeAddress(parts) : '', email: v('email'), ...(phone ? { phone } : {}) });
       profileForm.hidden = true;
       renderWho();
       const back = new URLSearchParams(location.search).get('return');

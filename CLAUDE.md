@@ -28,7 +28,9 @@ Overall plan: `admin/docs/online-business-plan.md`. Site, admin (`admin/`), data
   `src/lib/quote-text.ts`: WhatsApp / enquiry text.
 - My orders (`/account/`): `src/lib/account.ts` (pure: rows → orders, totals, re-order, invoice company from `public_business`),
   `src/lib/account-api.ts` (lazy supabase-js: sign-in by WhatsApp code to `+91…` or by e-mail code/link, `buyer_link` RPC, own orders via RLS),
-  `src/scripts/account.ts` (UI). Both sign-in forms use `components/SignInFields.astro` + `lib/signin-form.ts`; e-mail buyers give a mobile
+  `src/scripts/account.ts` (UI). Delivery address is entered in separate fields (`components/AddressFields.astro`,
+  `lib/address.ts`: house/building, area/street, landmark, city, pincode, state) and stored joined as the customer's one `address` text;
+  `parseAddress` splits it back to refill the forms. Both sign-in forms use `components/SignInFields.astro` + `lib/signin-form.ts`; e-mail buyers give a mobile
   for delivery (`buyer_link` `p_phone`, migration 11). The code goes out on WhatsApp through the `send-otp-whatsapp` hook (Supabase
   Send SMS hook → Meta Cloud API, `admin/supabase/functions`; owner's choice over SMS/DLT: cheapest). `send-sms-msg91` is kept, unused. jsPDF is a site dependency (deduped in astro.config) for the invoice PDF.
 - Payments: `netlify/lib/shop.ts` (`createShop`: payOrder, checkoutCustom, verifyPayment, webhook, paymentLink; HMAC checks; amounts from

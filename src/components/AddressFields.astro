@@ -1,0 +1,25 @@
+---
+/** Delivery address in separate fields (lib/address.ts joins them into the stored address text). */
+import { GST_STATES } from '@honeypackers/box-core/gst';
+interface Props {
+  /** Include a pincode box (checkout has its own, above the delivery estimate). */
+  pincode?: boolean;
+}
+const { pincode = false } = Astro.props;
+---
+
+<div class="form-grid" data-address>
+  <label class="field"><span>Flat, house no., building, company</span><input name="addr_line1" autocomplete="address-line1" maxlength="120" /></label>
+  <label class="field"><span>Area, street, sector, village</span><input name="addr_line2" autocomplete="address-line2" maxlength="120" /></label>
+  <label class="field"><span>Landmark <small>(optional)</small></span><input name="addr_landmark" maxlength="80" placeholder="e.g. near bus stand" /></label>
+  <div class="form-grid form-grid--2 stack-sm">
+    <label class="field"><span>Town / city</span><input name="addr_city" autocomplete="address-level2" maxlength="60" /></label>
+    {pincode && <label class="field"><span>Pincode</span><input name="pincode" inputmode="numeric" maxlength="6" autocomplete="postal-code" placeholder="e.g. 622001" /></label>}
+    <label class="field"><span>State</span>
+      <select name="stateCode" autocomplete="address-level1">
+        <option value="">Choose…</option>
+        {Object.entries(GST_STATES).map(([code, name]) => <option value={code}>{name}</option>)}
+      </select>
+    </label>
+  </div>
+</div>
