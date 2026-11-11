@@ -47,9 +47,12 @@ function motion() {
   document.body.append(amb); // last in the page: above section backgrounds, below content (z-index in home.css)
 
   // The hero carton as a real 3D object (three.js), loaded after the page; it follows this CSS carton's animation.
-  const load3d = () => import('./hero-3d').then((m) => Promise.all([m.mountHero3d(stage, box), m.mountHero3d(ambStage, ambBox)])).catch((e) => console.warn('[hero-3d] staying with the CSS carton', e));
-  if ('requestIdleCallback' in window) requestIdleCallback(() => void load3d(), { timeout: 1500 });
-  else setTimeout(() => void load3d(), 300);
+  // The CSS carton stays hidden meanwhile (html.gl-wait) so a reload never shows one box and then the other.
+  const fallback = () => [stage, ambStage].forEach((s) => s.classList.contains('hx__stage--gl') || s.classList.add('hx__stage--css'));
+  import('./hero-3d')
+    .then((m) => Promise.all([m.mountHero3d(stage, box), m.mountHero3d(ambStage, ambBox)]))
+    .catch((e) => console.warn('[hero-3d] staying with the CSS carton', e))
+    .finally(fallback);
 
   // Sit under the sticky shop header, not behind it.
   const header = document.querySelector<HTMLElement>('.shop-header');

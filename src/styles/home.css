@@ -267,3 +267,8 @@
   .chap-move, .chap-item { transform: none !important; translate: none !important; opacity: 1 !important; }
   .promo__art svg, .cat2__img svg { animation: none; }
 }
+
+/* hero carton: the CSS box waits hidden for the 3D one (html.gl-wait); stays if 3D cannot load (.hx__stage--css) */
+.gl-wait .hx__stage:not(.hx__stage--gl):not(.hx__stage--css) .cbox { visibility: hidden; }
+.hx__gl { animation: carton-in 0.4s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .hx__gl { animation: none; } }

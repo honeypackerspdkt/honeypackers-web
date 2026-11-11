@@ -20,6 +20,7 @@ export function liveCarton(svg: SVGSVGElement, redraw: () => void): LiveHandle {
       h.on = true;
       redraw();
     })
-    .catch((e) => console.warn('[carton] keeping the drawn box', e));
+    .catch((e) => console.warn('[carton] keeping the drawn box', e))
+    .finally(() => svg.setAttribute('data-carton-ready', '')); // the drawn box is hidden until now (html.gl-wait)
   return h;
 }

@@ -48,6 +48,11 @@ const business: Record<string, unknown> = {
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" content={brand} />
     <style is:inline set:html={`:root:root{--brand:${brand}}`}></style>
+    <script is:inline>
+      // drawn boxes stay hidden until the 3D carton replaces them (scripts/carton-tiles.ts, carton-live, hero-3d), so a reload never shows one box then another
+      document.documentElement.classList.add('gl-on', 'gl-wait');
+      setTimeout(function () { document.documentElement.classList.remove('gl-wait'); }, 6000);
+    </script>
     <meta property="og:type" content="website" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />

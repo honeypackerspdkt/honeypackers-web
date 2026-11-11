@@ -380,3 +380,11 @@ h3 { letter-spacing: -0.02em; }
 .step--done h2 .num { background: var(--good); }
 .summary { position: sticky; top: 90px; }
 @media (max-width: 900px) { .summary { position: static; } }
+
+/* 3D carton (lib/carton3d.ts): the drawn box is hidden until the 3D one is ready, then that fades in. html.gl-on (Base.astro, JS +
+   WebGL) for tiles, each waiting for its own picture; html.gl-wait (dropped after 6 s) for the live boxes above the fold. */
+.gl-on svg[data-carton]:not([data-carton-ready]) > *,
+.gl-wait svg[data-box]:not([data-carton-ready]) > * { visibility: hidden; }
+svg[data-carton] image, .bx-gl { animation: carton-in 0.35s ease-out both; }
+@keyframes carton-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { svg[data-carton] image, .bx-gl { animation: none; } }
