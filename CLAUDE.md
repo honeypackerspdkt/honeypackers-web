@@ -65,7 +65,9 @@ Overall plan: `admin/docs/online-business-plan.md`. Site, admin (`admin/`), data
 - `src/site.ts`: business details from `PUBLIC_*` env vars, nav. `src/styles/brand.css`: brand colours (override hub token variables only) + site components.
 - Admin: `admin/` is Honey Packers' own copy of the BoxBook app (copied 9 Nov 2026; BoxBook is now a separate product with
   its own repo and database, deployed later; changes there do not reach this repo unless ported by hand, as the paper stock + App settings were on 10 Nov 2026). React 19 + Vite, own package.json and tests
-  (`cd admin && npm test`, `npx tsc -b`). Built into `dist/admin/` by `scripts/build-admin.sh` (run by `netlify-build.sh`;
+  (`cd admin && npm test`, `npx tsc -b`). Local dev on one localhost: `npm run dev:all` (scripts/dev-all.mjs) starts the admin's Vite
+  server (:5175, base /admin/ in dev) and the site (:4322), whose dev server passes /admin/ through (astro.config.mjs proxy):
+  site at http://localhost:4322/, admin at http://localhost:4322/admin/. Netlify Functions (payments) still need `netlify dev`. Built into `dist/admin/` by `scripts/build-admin.sh` (run by `netlify-build.sh`;
   `VITE_SUPABASE_*` default to the site's `PUBLIC_SUPABASE_*`, `VITE_SHOP_URL` to Netlify's `URL`). Served at `/admin/`, noindex.
   Database schema for Honey Packers: `admin/supabase/migrations` (applied to the honeypackerspdkt project). Its notes: `admin/docs`.
   Every list page (Orders, Customers, Products, Saved boxes, Inbox, Staff, Paper stock, Box stock) uses `admin/src/list-page.tsx`

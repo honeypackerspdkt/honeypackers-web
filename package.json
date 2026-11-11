@@ -6,6 +6,7 @@
   "description": "honeypackers.in: website, online shop and Honey Packers admin (admin/, from BoxBook). Box maths in packages/box-core.",
   "scripts": {
     "dev": "astro dev",
+    "dev:all": "node scripts/dev-all.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
