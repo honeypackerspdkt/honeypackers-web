@@ -40,6 +40,9 @@
   --carton-dark: #865630;
   --carton-ink: #5e3a20;
   --carton-tape: #f4e3c4;
+  /* real-looking board for the 3D carton: neutral (black-alpha) noise, tinted by the faces underneath */
+  --kraft-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --kraft-fibre: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 0.42' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.6 -0.12'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
   /* One typeface everywhere, as in the owner's cinematic preview: Manrope (Mukta Malar only for Tamil letters). */
   --font-body: 'Manrope', 'Mukta Malar', system-ui, sans-serif;
   --font-head: 'Manrope', 'Mukta Malar', system-ui, sans-serif;

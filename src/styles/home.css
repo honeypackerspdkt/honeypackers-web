@@ -14,25 +14,39 @@
 /* ───── 3D carton (also used small in the builder) ───── */
 .cbox { --bw: 340px; --bh: 250px; --bd: 250px; position: absolute; left: 50%; top: 50%; width: var(--bw); height: var(--bh); margin: calc(var(--bh) / -2) 0 0 calc(var(--bw) / -2); transform-style: preserve-3d;
   transform: scale(var(--zoom, 1)) rotateX(var(--rx, -19deg)) rotateY(var(--ry, -32deg)) rotateZ(var(--rz, 0deg)); transition: width 0.5s, height 0.5s, margin 0.5s; }
-.cbox > div { position: absolute; border: 1px solid color-mix(in oklab, var(--carton-dark) 55%, transparent); box-shadow: inset 0 0 34px color-mix(in oklab, var(--carton-ink) 12%, transparent); transition: width 0.5s, height 0.5s, transform 0.5s, left 0.5s, top 0.5s; }
-.cbox > div::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent 0 3px, color-mix(in oklab, var(--carton-ink) 4%, transparent) 3px 4px); pointer-events: none; }
+.cbox { --flute: repeating-linear-gradient(90deg, var(--carton-lo) 0 1.5px, var(--carton-hi) 1.5px 4px); --tape: linear-gradient(90deg, color-mix(in oklab, var(--carton-dark) 55%, transparent), color-mix(in oklab, var(--carton-lo) 45%, transparent) 30%, color-mix(in oklab, white 35%, transparent) 46%, color-mix(in oklab, var(--carton-lo) 42%, transparent) 60%, color-mix(in oklab, var(--carton-dark) 55%, transparent)); }
+/* faces: kraft colour + worn, darker edges; ::after adds paper grain and fibres */
+.cbox > div { position: absolute; border: 1px solid color-mix(in oklab, var(--carton-dark) 60%, transparent);
+  box-shadow: inset 0 0 34px color-mix(in oklab, var(--carton-ink) 16%, transparent), inset 0 0 3px color-mix(in oklab, var(--carton-ink) 30%, transparent), inset 0 1px 0 color-mix(in oklab, var(--carton-hi) 70%, transparent);
+  transition: width 0.5s, height 0.5s, transform 0.5s, left 0.5s, top 0.5s; }
+.cbox > div::after { content: ''; position: absolute; inset: 0; background: var(--kraft-grain), var(--kraft-fibre); background-size: 180px 180px, 260px 260px; mix-blend-mode: multiply; opacity: 0.32; pointer-events: none; }
 .cbox .f-front, .cbox .f-back { width: var(--bw); height: var(--bh); }
-.cbox .f-front { background: linear-gradient(135deg, var(--carton-hi), var(--carton) 55%, var(--carton-lo)); transform: translateZ(calc(var(--bd) / 2)); }
-.cbox .f-back { background: linear-gradient(110deg, var(--carton), var(--carton-lo)); transform: rotateY(180deg) translateZ(calc(var(--bd) / 2)); }
-.cbox .f-right, .cbox .f-left { width: var(--bd); height: var(--bh); left: calc((var(--bw) - var(--bd)) / 2); background: linear-gradient(115deg, var(--carton-lo), var(--carton-dark) 90%); }
+/* corrugated flutes show along the top edge of the walls (seen when the lid opens) */
+.cbox .f-front { background: var(--flute) top / 100% 3px no-repeat, radial-gradient(120% 90% at 20% 15%, var(--carton-hi), var(--carton) 58%, var(--carton-lo)); transform: translateZ(calc(var(--bd) / 2)); }
+.cbox .f-back { background: var(--flute) top / 100% 3px no-repeat, linear-gradient(110deg, var(--carton), var(--carton-lo)); transform: rotateY(180deg) translateZ(calc(var(--bd) / 2)); }
+.cbox .f-right, .cbox .f-left { width: var(--bd); height: var(--bh); left: calc((var(--bw) - var(--bd)) / 2); background: var(--flute) top / 100% 3px no-repeat, linear-gradient(115deg, var(--carton-lo), var(--carton-dark) 92%); }
 .cbox .f-right { transform: rotateY(90deg) translateZ(calc(var(--bw) / 2)); }
 .cbox .f-left { transform: rotateY(-90deg) translateZ(calc(var(--bw) / 2)); }
 .cbox .f-bottom { width: var(--bw); height: var(--bd); top: calc((var(--bh) - var(--bd)) / 2); background: var(--carton-dark); transform: rotateX(-90deg) translateZ(calc(var(--bh) / 2)); }
-.cbox .f-top { width: var(--bw); height: var(--bd); top: calc((var(--bh) - var(--bd)) / 2); transform-style: preserve-3d; transform: rotateX(90deg) translateZ(calc(var(--bh) / 2)); border: 0; box-shadow: none; background: color-mix(in oklab, var(--carton-ink) 70%, black); }
+.cbox .f-top { width: var(--bw); height: var(--bd); top: calc((var(--bh) - var(--bd)) / 2); transform-style: preserve-3d; transform: rotateX(90deg) translateZ(calc(var(--bh) / 2)); border: 0; box-shadow: none;
+  /* inside of the box: kraft in shadow, darker towards the walls */
+  background: var(--kraft-fibre), radial-gradient(75% 70% at 50% 55%, color-mix(in oklab, var(--carton-lo) 80%, var(--carton-ink)), color-mix(in oklab, var(--carton-dark) 55%, var(--carton-ink)) 100%); background-size: 260px 260px, auto; background-blend-mode: multiply; }
 .cbox .f-top::after { display: none; }
-.cbox .flap { position: absolute; left: 0; width: 100%; height: 50%; background: linear-gradient(125deg, var(--carton-hi), var(--carton)); border: 1px solid color-mix(in oklab, var(--carton-dark) 55%, transparent); backface-visibility: visible; }
+/* packing tape runs over the lid and down the front and back */
+.cbox .f-front::before, .cbox .f-back::before { content: ''; position: absolute; left: 50%; top: 0; width: 16%; height: 24%; transform: translateX(-50%); background: var(--tape); border-inline: 1px solid color-mix(in oklab, var(--carton-dark) 35%, transparent); z-index: 1; }
+/* "this way up" arrows printed on the sides */
+.cbox .f-right::before, .cbox .f-left::before { content: '\2191\2191'; position: absolute; right: 10%; top: 9%; font: 800 calc(var(--bh) * 0.11) / 1 var(--font-body); letter-spacing: -0.1em; color: color-mix(in oklab, var(--carton-ink) 70%, transparent); mix-blend-mode: multiply; }
+.cbox .flap { position: absolute; left: 0; width: 100%; height: 50%; background: var(--kraft-grain), radial-gradient(130% 120% at 30% 0%, var(--carton-hi), var(--carton) 70%); background-size: 180px 180px, auto; background-blend-mode: multiply; border: 1px solid color-mix(in oklab, var(--carton-dark) 60%, transparent); box-shadow: inset 0 0 18px color-mix(in oklab, var(--carton-ink) 14%, transparent); backface-visibility: visible; }
 .cbox .flap--a { top: 0; transform-origin: top; transform: rotateX(var(--lid, 0deg)); }
 .cbox .flap--b { bottom: 0; transform-origin: bottom; transform: rotateX(calc(-1 * var(--lid, 0deg))); }
-.cbox .flap--b::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 16%; transform: translateX(-50%); background: color-mix(in oklab, var(--carton-tape) 80%, transparent); border-inline: 1px solid var(--carton-lo); }
-.cbox .flap--a::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 16%; transform: translateX(-50%); background: color-mix(in oklab, var(--carton-tape) 80%, transparent); border-inline: 1px solid var(--carton-lo); }
-.cbox .mark { position: absolute; left: 13%; top: 22%; font: 800 calc(var(--bw) * 0.14) / 0.95 var(--font-body); letter-spacing: -0.05em; color: var(--carton-ink); text-transform: uppercase; }
+.cbox .flap--a::before, .cbox .flap--b::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 16%; transform: translateX(-50%); background: var(--tape); border-inline: 1px solid color-mix(in oklab, var(--carton-dark) 35%, transparent); }
+/* the cut edge of each flap shows its flutes where the two flaps meet */
+.cbox .flap::after { content: ''; position: absolute; left: 0; right: 0; height: 3px; background: var(--flute); opacity: 0.9; }
+.cbox .flap--a::after { bottom: 0; }
+.cbox .flap--b::after { top: 0; }
+.cbox .mark { position: absolute; left: 13%; top: 22%; font: 800 calc(var(--bw) * 0.14) / 0.95 var(--font-body); letter-spacing: -0.05em; color: var(--carton-ink); text-transform: uppercase; mix-blend-mode: multiply; opacity: 0.88; z-index: 2; }
 .cbox .mark small { display: block; margin-top: 0.7em; font-size: 0.2em; letter-spacing: 0.18em; font-weight: 700; }
-.cbox .code { position: absolute; right: 7%; bottom: 9%; width: 22%; height: 11%; background: repeating-linear-gradient(90deg, var(--carton-ink) 0 2px, transparent 2px 4px, var(--carton-ink) 4px 5px, transparent 5px 9px); opacity: 0.55; }
+.cbox .code { mix-blend-mode: multiply; z-index: 2; position: absolute; right: 7%; bottom: 9%; width: 22%; height: 11%; background: repeating-linear-gradient(90deg, var(--carton-ink) 0 2px, transparent 2px 4px, var(--carton-ink) 4px 5px, transparent 5px 9px); opacity: 0.55; }
 
 /* ───── hero ───── */
 .hx { position: relative; height: 125vh; min-height: 740px; background: var(--stage); color: var(--stage-ink); isolation: isolate; }
