@@ -39,7 +39,11 @@ Overall plan: `admin/docs/online-business-plan.md`. Site, admin (`admin/`), data
   `src/lib/quote-text.ts`: WhatsApp / enquiry text.
 - My orders (`/account/`): `src/lib/account.ts` (pure: rows → orders, totals, re-order, invoice company from `public_business`),
   `src/lib/account-api.ts` (lazy supabase-js: sign-in by WhatsApp code to `+91…` or by e-mail code/link, `buyer_link` RPC, own orders via RLS),
-  `src/scripts/account.ts` (UI). Delivery address is entered in separate fields (`components/AddressFields.astro`,
+  `src/scripts/account.ts` (UI: one "Sign in or create account" card when signed out; signed in, tabs My orders (#orders) and
+  Profile & address (#profile), Sign out). Header account menu (`Header.astro`, `lib/me.ts`: name cached in localStorage `hp-me`,
+  shown only while a Supabase session is saved) greets the buyer and signs out from any page. Checkout order (owner's choice
+  11 Nov 2026): 1 sign in → 2 delivery address (saved-address card from the profile, Change opens the form; confirming saves it to
+  the customer record, which is the delivery address the order uses) → 3 review → pay. Delivery address is entered in separate fields (`components/AddressFields.astro`,
   `lib/address.ts`: house/building, area/street, landmark, city, pincode, state) and stored joined as the customer's one `address` text;
   `parseAddress` splits it back to refill the forms. Both sign-in forms use `components/SignInFields.astro` + `lib/signin-form.ts`; e-mail buyers give a mobile
   for delivery (`buyer_link` `p_phone`, migration 11). The code goes out on WhatsApp through the `send-otp-whatsapp` hook (Supabase

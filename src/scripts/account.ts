@@ -4,6 +4,7 @@ import * as api from '../lib/account-api';
 import { bindSignInForm, codeHint, targetLabel } from '../lib/signin-form';
 import { addressProblem, composeAddress, fillAddressFields, parseAddress, readAddressFields } from '../lib/address';
 import { callFn, pay, type CheckoutStart } from '../lib/pay';
+import { forgetMe, rememberMe } from '../lib/me';
 
 const inr = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const rs = (n: number) => `₹${inr.format(n)}`;
@@ -90,6 +91,18 @@ export async function initAccount(root: HTMLElement) {
     }
   });
 
+  // tabs: #orders (default) and #profile
+  type Tab = 'orders' | 'profile';
+  const selectTab = (t: Tab) => {
+    root.querySelectorAll<HTMLElement>('[data-panel]').forEach((p) => (p.hidden = p.dataset.panel !== t));
+    root.querySelectorAll<HTMLElement>('[data-tab]').forEach((a) => a.setAttribute('aria-current', String(a.dataset.tab === t)));
+  };
+  const tabFromHash = (): Tab => (location.hash === '#profile' ? 'profile' : 'orders');
+  window.addEventListener('hashchange', () => {
+    selectTab(tabFromHash());
+    if (tabFromHash() === 'profile' && me) fillProfile(me);
+  });
+
   const fillProfile = (c: Customer) => {
     const set = (n: string, v: string) => ((profileForm.elements.namedItem(n) as HTMLInputElement).value = v);
     set('name', c.name);
@@ -103,12 +116,9 @@ export async function initAccount(root: HTMLElement) {
   const openProfile = (first: boolean) => {
     if (me) fillProfile(me);
     $('[data-profile-title]').textContent = first ? 'Welcome! Tell us who you are' : 'Your details';
-    $('[data-profile-cancel]').hidden = first;
-    profileForm.hidden = false;
-    profileForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (location.hash !== '#profile') history.replaceState(null, '', '#profile');
+    selectTab('profile');
   };
-  $('[data-edit-profile]').addEventListener('click', () => openProfile(false));
-  $('[data-profile-cancel]').addEventListener('click', () => (profileForm.hidden = true));
   profileForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const f = new FormData(profileForm);
@@ -126,8 +136,11 @@ export async function initAccount(root: HTMLElement) {
     busy(profileForm, true);
     try {
       me = await api.link({ name: v('name'), company: v('company'), gstin, stateCode: v('stateCode') || (gstin ? gstin.slice(0, 2) : ''), address: started ? composeAddress(parts) : '', email: v('email'), ...(phone ? { phone } : {}) });
-      profileForm.hidden = true;
+      rememberMe(me);
       renderWho();
+      $('[data-profile-title]').textContent = 'Your details';
+      flash('Saved. These details are filled in for you at checkout.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       const back = new URLSearchParams(location.search).get('return');
       if (back && back.startsWith('/') && !back.startsWith('//')) location.href = back;
     } catch (err) {
@@ -139,13 +152,17 @@ export async function initAccount(root: HTMLElement) {
 
   $('[data-signout]').addEventListener('click', async () => {
     await api.signOut();
+    forgetMe();
     me = null;
     orders = [];
+    flash('');
+    history.replaceState(null, '', location.pathname);
     show('phone');
   });
 
   const renderWho = () => {
-    $('[data-who]').textContent = me ? `Signed in as ${me.name || 'you'} · ${me.phone ? `+91 ${me.phone.slice(-10, -5)} ${me.phone.slice(-5)}` : me.email}${me.company ? ` · ${me.company}` : ''}` : '';
+    $('[data-hello]').textContent = me?.name ? `Hello, ${me.name.split(/\s+/)[0]}` : 'Your account';
+    $('[data-who]').textContent = me ? `${me.phone ? `+91 ${me.phone.slice(-10, -5)} ${me.phone.slice(-5)}` : me.email}${me.company ? ` · ${me.company}` : ''}` : '';
   };
 
   const renderOrders = () => {
@@ -254,9 +271,12 @@ export async function initAccount(root: HTMLElement) {
       const r = await api.myOrders();
       orders = r.orders;
       business = r.business;
+      rememberMe(me);
       renderWho();
       renderOrders();
       show('account');
+      fillProfile(me);
+      selectTab(tabFromHash());
       if (!me.name || (byEmail && !me.phone)) openProfile(true);
       // Came here to sign in from the price page: go back there.
       const back = new URLSearchParams(location.search).get('return');

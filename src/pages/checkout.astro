@@ -6,29 +6,15 @@ import SignInFields from '../components/SignInFields.astro';
 import AddressFields from '../components/AddressFields.astro';
 ---
 
-<Base title="Checkout" description="Your boxes, delivery, GST and secure online payment.">
+<Base title="Checkout" description="Sign in, delivery address, then secure online payment with a GST invoice.">
   <section class="container" style="padding-top:24px" data-checkout data-live={live ? '1' : ''} data-wa={site.whatsapp} data-name={site.name}>
     <h1 style="margin-bottom:16px">Checkout</h1>
     <div data-empty hidden class="card"><p style="margin:0">Your cart is empty. <a href="/shop/">Shop boxes</a> or <a href="/custom-box/">price a custom size</a>.</p></div>
     <div class="checkout" data-full hidden>
       <div>
-        <div class="step">
-          <h2><span class="num">1</span>Your boxes</h2>
-          <div data-lines></div>
-          <p class="notice small" data-problems hidden style="margin:10px 0 0"></p>
-        </div>
-
-        <div class="step">
-          <h2><span class="num">2</span>Delivery</h2>
-          <div class="form-grid">
-            <label class="field" style="max-width:240px"><span>Pincode</span><input name="pincode" inputmode="numeric" maxlength="6" autocomplete="postal-code" placeholder="e.g. 622001" /></label>
-            <p class="small" data-deliv style="margin:0"></p>
-            <AddressFields />
-          </div>
-        </div>
-
-        <div class="step" data-step-details>
-          <h2><span class="num">3</span>Your details</h2>
+        <!-- 1. sign in (or create an account: same code) -->
+        <div class="step" data-step-signin>
+          <h2><span class="num">1</span>Sign in</h2>
           <div data-off hidden>
             <p style="margin:0 0 12px">Online payment opens soon. Send this order to us and we'll confirm it with you.</p>
             <div class="btn-row">
@@ -37,28 +23,55 @@ import AddressFields from '../components/AddressFields.astro';
             </div>
           </div>
           <form data-phone hidden class="form-grid" novalidate>
-            <p class="small" style="margin:0">Sign in to pay and to see your orders and invoices later.</p>
+            <p class="small" style="margin:0">Sign in or create an account to order. New here? Your account is made when you confirm the code.</p>
             <SignInFields />
-            <div><button class="btn btn--primary" type="submit">Send code</button></div>
+            <div><button class="btn btn--primary" type="submit">Continue</button></div>
           </form>
           <form data-code hidden class="form-grid" novalidate>
             <p style="margin:0">Code sent to <strong data-mobile></strong>. <button type="button" class="linkish" data-change>Change</button></p>
             <p class="muted small" style="margin:0" data-code-hint></p>
             <label class="field"><span>6-digit code</span><input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" style="letter-spacing:.3em;max-width:200px" /></label>
-            <div class="btn-row"><button class="btn btn--primary" type="submit">Verify</button><button type="button" class="btn btn--ghost" data-resend>Send again</button></div>
+            <div class="btn-row"><button class="btn btn--primary" type="submit">Sign in</button><button type="button" class="btn btn--ghost" data-resend>Send again</button></div>
           </form>
-          <div data-details hidden class="form-grid">
-            <p class="small muted" style="margin:0" data-who></p>
+          <div data-signed hidden class="step__done">
+            <span data-who></span>
+            <button type="button" class="linkish small" data-signout>Not you? Sign out</button>
+          </div>
+        </div>
+
+        <!-- 2. delivery address: filled from the profile, saved back to it -->
+        <div class="step" data-step-address>
+          <h2><span class="num">2</span>Delivery address</h2>
+          <p class="muted" style="margin:0" data-addr-locked>Sign in first. Your saved details and address fill in here.</p>
+          <div data-addr-card hidden class="addr-card">
+            <div data-addr-text></div>
+            <button type="button" class="btn btn--ghost" data-addr-edit>Change</button>
+          </div>
+          <div data-addr-form hidden class="form-grid">
             <div class="form-grid form-grid--2 stack-sm">
               <label class="field"><span>Your name</span><input name="name" autocomplete="name" maxlength="80" /></label>
               <label class="field"><span>Company <small>(optional)</small></span><input name="company" autocomplete="organization" maxlength="120" /></label>
             </div>
-            <label class="field"><span>GSTIN <small>(optional, for input tax credit)</small></span><input name="gstin" maxlength="15" style="text-transform:uppercase" /></label>
-            <label class="field"><span>E-mail <small>(optional, for the invoice)</small></span><input name="email" type="email" autocomplete="email" maxlength="120" /></label>
-            <label class="field" data-need-phone hidden><span>Mobile number <small>(for delivery)</small></span><input name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" placeholder="98765 43210" /></label>
+            <div class="form-grid form-grid--2 stack-sm">
+              <label class="field" data-need-phone hidden><span>Mobile number <small>(for delivery)</small></span><input name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" maxlength="14" placeholder="98765 43210" /></label>
+              <label class="field"><span>E-mail <small>(optional, for the invoice)</small></span><input name="email" type="email" autocomplete="email" maxlength="120" /></label>
+              <label class="field"><span>GSTIN <small>(optional, for input tax credit)</small></span><input name="gstin" maxlength="15" style="text-transform:uppercase" /></label>
+            </div>
+            <label class="field" style="max-width:240px"><span>Pincode</span><input name="pincode" inputmode="numeric" maxlength="6" autocomplete="postal-code" placeholder="e.g. 622001" /></label>
+            <AddressFields />
+            <p class="small muted" style="margin:0">Saved to your profile, so it is filled in next time.</p>
+            <div><button class="btn btn--primary" type="button" data-addr-done>Deliver to this address</button></div>
           </div>
-          <p class="notice small" data-err hidden style="margin:12px 0 0"></p>
+          <p class="small" data-deliv style="margin:10px 0 0"></p>
         </div>
+
+        <!-- 3. review -->
+        <div class="step" data-step-review>
+          <h2><span class="num">3</span>Review your order</h2>
+          <div data-lines></div>
+          <p class="notice small" data-problems hidden style="margin:10px 0 0"></p>
+        </div>
+        <p class="notice small" data-err hidden style="margin:0 0 16px"></p>
       </div>
 
       <aside class="summary">

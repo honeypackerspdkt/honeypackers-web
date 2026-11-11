@@ -388,3 +388,43 @@ h3 { letter-spacing: -0.02em; }
 svg[data-carton] image, .bx-gl { animation: carton-in 0.35s ease-out both; }
 @keyframes carton-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { svg[data-carton] image, .bx-gl { animation: none; } }
+
+/* Header account menu (Header.astro): "Hello, sign in" / "Hello, Name", My orders, Profile & address, Sign out */
+.acct { position: relative; }
+.acct__btn { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 10px; border-radius: 12px; color: var(--ink); }
+.acct__btn::-webkit-details-marker { display: none; }
+.acct__btn:hover, .acct[open] .acct__btn { background: var(--lavender); }
+.acct__label { display: none; line-height: 1.1; text-align: left; }
+.acct__label small { display: block; font-size: 0.72rem; color: var(--ink-soft); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acct__label strong { font-size: 0.9rem; }
+@media (min-width: 1000px) { .acct__label { display: block; } }
+.acct__panel { display: none; position: absolute; right: 0; top: 52px; z-index: 60; width: 280px; padding: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lift); }
+.acct[open] .acct__panel { display: block; }
+.acct__title { margin: 0 0 4px; font-weight: 800; font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; }
+.acct__link { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 10px; border-radius: 10px; border: 0; background: none; color: var(--ink); font: 600 0.97rem var(--font-body); text-decoration: none; cursor: pointer; text-align: left; }
+.acct__link:hover { background: var(--lavender); }
+.acct__out { margin-top: 6px; border-top: 1px solid var(--border); border-radius: 0 0 10px 10px; color: var(--accent); }
+
+/* Account page (account.astro): sign-in card, then tabs */
+.auth { max-width: 440px; margin: 8px auto 0; padding: 28px; }
+.auth__title { font-size: 1.6rem; margin: 0; }
+.notice--ok { background: #e7f4ea; color: #1e5a33; }
+.acc-head { display: flex; justify-content: space-between; align-items: end; gap: 12px; margin-bottom: 18px; }
+.acc { display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
+.acc__nav { position: sticky; top: 100px; display: grid; gap: 2px; padding: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.acc__nav a, .acc__nav button { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 10px; border: 0; background: none; color: var(--ink); font: 600 0.97rem var(--font-body); text-decoration: none; cursor: pointer; text-align: left; }
+.acc__nav a:hover, .acc__nav button:hover { background: var(--lavender); }
+.acc__nav a[aria-current='true'] { background: var(--lavender); color: var(--accent); }
+.acc__nav button { color: var(--accent); border-top: 1px solid var(--border); border-radius: 0 0 10px 10px; margin-top: 4px; }
+@media (max-width: 760px) {
+  .acc { grid-template-columns: 1fr; gap: 14px; }
+  .acc__nav { position: static; display: flex; overflow-x: auto; padding: 4px; }
+  .acc__nav a, .acc__nav button { flex: none; white-space: nowrap; }
+  .acc__nav button { border-top: 0; margin: 0 0 0 auto; border-radius: 10px; }
+}
+
+/* Checkout steps: signed-in line and the saved delivery address card */
+.step__done { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; }
+.addr-card { display: flex; justify-content: space-between; align-items: start; gap: 16px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg, #fff); line-height: 1.55; }
+.addr-card .btn { flex: none; }
+.step[hidden] { display: none; }

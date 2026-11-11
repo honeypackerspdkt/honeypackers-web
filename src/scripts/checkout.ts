@@ -8,6 +8,7 @@ import { bindSignInForm, codeHint, targetLabel } from '../lib/signin-form';
 import type { SignInTarget } from '../lib/account-api';
 import { icon } from '../lib/icons';
 import { esc, rs } from '../lib/product-card';
+import { rememberMe, signOutEverywhere } from '../lib/me';
 
 const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 const message = (e: unknown) => {
@@ -17,7 +18,10 @@ const message = (e: unknown) => {
   return m;
 };
 
-/** One-page checkout: boxes → delivery → sign in (WhatsApp or e-mail code) + details → pay (server prices it again). */
+/**
+ * Checkout in order: 1 sign in (or create an account: same WhatsApp / e-mail code) → 2 delivery address (filled from the
+ * profile, saved back to it: the order is delivered to the customer record's address) → 3 review → pay (server prices it again).
+ */
 export async function initCheckout(root: HTMLElement) {
   const $ = <T extends Element = HTMLElement>(s: string) => root.querySelector<T>(s)!;
   const live = Boolean(root.dataset.live);
@@ -34,6 +38,9 @@ export async function initCheckout(root: HTMLElement) {
   let target: SignInTarget | null = null;
   /** Signed in by e-mail: a mobile number for delivery is needed too. */
   let byEmail = false;
+  /** Delivery address step: locked until signed in, then the saved address (card) or the form. */
+  let addrMode: 'locked' | 'card' | 'form' = 'locked';
+  let signedPhone = '';
   let api: typeof import('../lib/account-api') | null = null;
   const getApi = async () => (api ??= await import('../lib/account-api'));
   try {
@@ -90,31 +97,62 @@ export async function initCheckout(root: HTMLElement) {
 
     const min = shop?.minOrderValue || 0;
     const why = !shopLive
-      ? 'Online payment opens soon: send the order instead (step 3).'
-      : priced.problems.length || !priced.lines.length
-        ? 'Fix the items above first.'
-        : delivery == null
-          ? 'Enter a pincode we deliver to.'
-          : addressProblem(address())
-            ? addressProblem(address())
-          : min > 0 && priced.goods < min
-            ? `Minimum online order is ₹${min} before GST.`
-            : !signedIn
-              ? 'Sign in with WhatsApp or e-mail (step 3).'
-              : !detailsOk()
-                ? byEmail ? 'Add your name and a mobile number for delivery.' : 'Add your name.'
-                : '';
+      ? 'Online payment opens soon: send the order instead (step 1).'
+      : !signedIn
+        ? 'Sign in or create an account first (step 1).'
+        : addrMode !== 'card'
+          ? 'Confirm your delivery address (step 2).'
+          : priced.problems.length || !priced.lines.length
+            ? 'Fix the items in your order first (step 3).'
+            : delivery == null
+              ? 'We need a pincode we deliver to (step 2).'
+              : min > 0 && priced.goods < min
+                ? `Minimum online order is ₹${min} before GST.`
+                : addrIssue();
     $<HTMLButtonElement>('[data-pay]').disabled = !!why;
     $('[data-pay-why]').textContent = why;
   }
 
   const field = (n: string) => root.querySelector<HTMLInputElement | HTMLSelectElement>(`[name=${n}]`)!;
-  const detailsOk = () => field('name').value.trim() !== '' && addressProblem(address()) === '' && (!byEmail || mobile10(field('phone').value) !== '') && (!field('gstin').value.trim() || GSTIN.test(field('gstin').value.trim().toUpperCase()));
 
-  function showStep(which: 'off' | 'phone' | 'code' | 'details') {
-    for (const k of ['off', 'phone', 'code', 'details']) $(`[data-${k}]`).hidden = k !== which;
-    $('[data-step-details]').classList.toggle('step--done', which === 'details');
+  /** What is wrong with the name / contact / address, or ''. */
+  const addrIssue = () => {
+    if (!field('name').value.trim()) return 'Add your name.';
+    if (byEmail && !mobile10(field('phone').value)) return 'Add a 10-digit mobile number for delivery.';
+    const g = field('gstin').value.trim().toUpperCase();
+    if (g && !GSTIN.test(g)) return 'That GSTIN does not look right (15 characters, e.g. 33ABCDE1234F1Z5).';
+    return addressProblem(address());
+  };
+
+  function showStep(which: 'off' | 'phone' | 'code' | 'signed') {
+    for (const k of ['off', 'phone', 'code', 'signed']) $(`[data-${k}]`).hidden = k !== which;
+    $('[data-step-signin]').classList.toggle('step--done', which === 'signed');
+    $('[data-step-address]').hidden = which === 'off';
   }
+
+  function setAddr(mode: typeof addrMode) {
+    addrMode = mode;
+    $('[data-addr-locked]').hidden = mode !== 'locked';
+    $('[data-addr-card]').hidden = mode !== 'card';
+    $('[data-addr-form]').hidden = mode !== 'form';
+    $('[data-deliv]').hidden = mode === 'locked';
+    $('[data-step-address]').classList.toggle('step--done', mode === 'card');
+    if (mode === 'card') {
+      const g = field('gstin').value.trim().toUpperCase();
+      const company = field('company').value.trim();
+      const contact = byEmail ? `+91 ${mobile10(field('phone').value)}` : signedPhone;
+      $('[data-addr-text]').innerHTML =
+        `<strong>${esc(field('name').value.trim())}</strong>${company ? ` · ${esc(company)}` : ''}<br>` +
+        esc(composeAddress(address())).replace(/\n/g, '<br>') +
+        `<br><span class="muted small">${esc([contact, field('email').value.trim(), g ? `GSTIN ${g}` : ''].filter(Boolean).join(' · '))}</span>`;
+    }
+    render();
+  }
+
+  const profileFromForm = () => {
+    const gstin = field('gstin').value.trim().toUpperCase();
+    return { name: field('name').value.trim(), company: field('company').value.trim(), gstin, stateCode: field('stateCode').value || (gstin ? gstin.slice(0, 2) : ''), address: composeAddress(address()), email: field('email').value.trim(), ...(byEmail ? { phone: mobile10(field('phone').value) } : {}) };
+  };
 
   async function signedInView() {
     const a = await getApi();
@@ -122,7 +160,10 @@ export async function initCheckout(root: HTMLElement) {
     signedIn = true;
     const who = await a.signedIn();
     byEmail = Boolean(who && !who.phone);
-    $('[data-who]').textContent = who?.phone ? `Signed in as +91 ${who.phone.replace(/\D/g, '').slice(-10)}` : `Signed in as ${who?.email || me.email}`;
+    const digits = who?.phone ? who.phone.replace(/\D/g, '').slice(-10) : '';
+    signedPhone = digits ? `+91 ${digits.slice(0, 5)} ${digits.slice(5)}` : '';
+    $('[data-who]').innerHTML = `Signed in as <strong>${esc(me.name || signedPhone || who?.email || me.email)}</strong>${me.name ? ` <span class="muted">· ${esc(signedPhone || who?.email || me.email)}</span>` : ''}`;
+    rememberMe(me);
     ($('[data-need-phone]') as HTMLElement).hidden = !byEmail;
     if (byEmail && !field('phone').value) field('phone').value = me.phone.replace(/\D/g, '').slice(-10);
     if (!field('name').value) field('name').value = me.name;
@@ -131,8 +172,8 @@ export async function initCheckout(root: HTMLElement) {
     if (!field('email').value) field('email').value = me.email;
     if (!field('stateCode').value && me.stateCode) field('stateCode').value = me.stateCode;
     fillAddressFields(root, parseAddress(me.address, me.stateCode));
-    showStep('details');
-    render();
+    showStep('signed');
+    setAddr(addrIssue() ? 'form' : 'card');
   }
 
   // steps and edits
@@ -154,7 +195,38 @@ export async function initCheckout(root: HTMLElement) {
     }
     render();
   });
-  root.addEventListener('input', (e) => (e.target as HTMLElement).closest('[data-details]') && render());
+  root.addEventListener('input', (e) => (e.target as HTMLElement).closest('[data-addr-form]') && render());
+
+  // delivery address: confirm (saved to the profile) / change
+  $('[data-addr-done]').addEventListener('click', async () => {
+    const issue = addrIssue();
+    if (issue) return err(issue);
+    err('');
+    const btn = $<HTMLButtonElement>('[data-addr-done]');
+    btn.disabled = true;
+    try {
+      const me = await (await getApi()).link(profileFromForm());
+      rememberMe(me);
+      setAddr('card');
+    } catch (x) {
+      err(message(x));
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  $('[data-addr-edit]').addEventListener('click', () => {
+    setAddr('form');
+    field('name').focus();
+  });
+  $('[data-signout]').addEventListener('click', async () => {
+    await signOutEverywhere();
+    signedIn = false;
+    byEmail = false;
+    for (const n of ['name', 'company', 'gstin', 'email', 'phone']) field(n).value = '';
+    fillAddressFields(root, parseAddress('', ''), true);
+    showStep('phone');
+    setAddr('locked');
+  });
   $('[data-address]').addEventListener('input', render);
   $('[data-address]').addEventListener('change', render);
 
@@ -202,8 +274,7 @@ export async function initCheckout(root: HTMLElement) {
     err('');
     try {
       const a = await getApi();
-      const gstin = field('gstin').value.trim().toUpperCase();
-      await a.link({ name: field('name').value.trim(), company: field('company').value.trim(), gstin, stateCode: field('stateCode').value || (gstin ? gstin.slice(0, 2) : ''), address: composeAddress(address()), email: field('email').value.trim(), ...(byEmail ? { phone: mobile10(field('phone').value) } : {}) });
+      await a.link(profileFromForm());
       const token = await a.accessToken();
       if (!token) throw new Error('Your sign-in has expired. Please sign in again.');
       const { callFn, pay } = await import('../lib/pay');
@@ -226,6 +297,7 @@ export async function initCheckout(root: HTMLElement) {
   products = c.products;
   shop = l.shop;
   shopLive = live && c.source === 'live' && l.source === 'live';
+  setAddr('locked');
   if (!shopLive) showStep('off');
   else {
     try {

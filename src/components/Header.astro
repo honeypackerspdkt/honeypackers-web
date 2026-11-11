@@ -21,7 +21,8 @@ const q = Astro.url.searchParams?.get?.('q') ?? '';
           <input name="q" type="search" placeholder="Search boxes" aria-label="Search boxes" />
         </form>
         {nav.map((l) => <a href={l.href} aria-current={current(l.href)}>{l.label}</a>)}
-        <a href="/account/" aria-current={current('/account/')}>My orders</a>
+        <a href="/account/#orders" aria-current={current('/account/')}>My orders</a>
+        <a href="/account/#profile">Profile &amp; address</a>
       </nav>
     </details>
     <a class="brand" href="/" aria-label={`${site.name} home`}>
@@ -35,7 +36,27 @@ const q = Astro.url.searchParams?.get?.('q') ?? '';
       {nav.slice(0, 3).map((l) => <a href={l.href} aria-current={current(l.href)}>{l.label}</a>)}
     </nav>
     <div class="shop-header__icons">
-      <a class="icon-btn" href="/account/" aria-label="My account and orders" aria-current={current('/account/')}><Fragment set:html={icon.user()} /></a>
+      <details class="acct" data-acct>
+        <summary class="acct__btn" aria-label="Account">
+          <Fragment set:html={icon.user()} />
+          <span class="acct__label"><small data-acct-greet>Hello, sign in</small><strong>Account</strong></span>
+        </summary>
+        <div class="acct__panel">
+          <div data-acct-out>
+            <p class="acct__title">Welcome</p>
+            <p class="small muted" style="margin:0 0 12px">Sign in to order, track your orders and download GST invoices.</p>
+            <a class="btn btn--primary btn--block" href="/account/">Sign in</a>
+            <p class="small muted" style="margin:10px 0 0;text-align:center">New customer? <a href="/account/">Create an account</a></p>
+          </div>
+          <div data-acct-in hidden>
+            <p class="acct__title" data-acct-name></p>
+            <p class="small muted" style="margin:0 0 8px" data-acct-contact></p>
+            <a class="acct__link" href="/account/#orders"><Fragment set:html={icon.cart(18)} />My orders</a>
+            <a class="acct__link" href="/account/#profile"><Fragment set:html={icon.user(18)} />Profile &amp; address</a>
+            <button class="acct__link acct__out" type="button" data-acct-signout>Sign out</button>
+          </div>
+        </div>
+      </details>
       <button class="icon-btn" type="button" data-open-cart aria-label="Cart">
         <Fragment set:html={icon.cart()} />
         <span class="badge" data-cart-badge hidden>0</span>
@@ -50,6 +71,34 @@ const q = Astro.url.searchParams?.get?.('q') ?? '';
 </header>
 
 <script>
+  import { cachedMe, signOutEverywhere } from '../lib/me';
+  // Account menu: greet a signed-in buyer, sign out from any page.
+  const acct = document.querySelector<HTMLDetailsElement>('[data-acct]');
+  if (acct) {
+    const q = <T extends HTMLElement>(s: string) => acct.querySelector<T>(s)!;
+    const paint = () => {
+      const me = cachedMe();
+      q('[data-acct-out]').hidden = !!me;
+      q('[data-acct-in]').hidden = !me;
+      const first = me?.name.split(/\s+/)[0] || '';
+      q('[data-acct-greet]').textContent = me ? `Hello, ${first || 'there'}` : 'Hello, sign in';
+      q('[data-acct-name]').textContent = me ? `Hello, ${me.name || 'there'}` : '';
+      q('[data-acct-contact]').textContent = me?.contact || '';
+    };
+    paint();
+    window.addEventListener('me-change', paint);
+    window.addEventListener('storage', paint);
+    q('[data-acct-signout]').addEventListener('click', async () => {
+      acct.open = false;
+      await signOutEverywhere();
+      if (/^\/(account|checkout)\//.test(location.pathname)) location.reload();
+    });
+    document.addEventListener('click', (e) => {
+      if (acct.open && !acct.contains(e.target as Node)) acct.open = false;
+    });
+    document.addEventListener('keydown', (e) => e.key === 'Escape' && (acct.open = false));
+  }
+
   // The site is static, so the query (?ply=5) is only known in the browser: mark the matching category.
   const here = location.pathname + location.search;
   document.querySelectorAll<HTMLAnchorElement>('.cat-bar a').forEach((a) => {
