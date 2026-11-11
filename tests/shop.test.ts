@@ -16,6 +16,7 @@ function reset() {
     customers: [
       { id: 'c-1', org_id: ORG, name: 'Kumar', phone: '9876543210', email: 'k@x.in', user_id: 'u-buyer' },
       { id: 'c-2', org_id: ORG, name: 'Other', phone: '9000000000', user_id: 'u-other' },
+      { id: 'c-3', org_id: ORG, name: 'Mail buyer', phone: '9123456789', email: 'm@x.in', user_id: 'u-mail' },
     ],
     orders: [{ id: 'o-1', org_id: ORG, number: 'ORD-0007', customer_id: 'c-1', date: '2026-11-01', status: 'delivered', discount: 100, tax_pct: 5, deleted_at: null }],
     order_items: [
@@ -43,7 +44,7 @@ function reset() {
   files = {};
 }
 
-const USERS: Record<string, Row> = { buyer: { id: 'u-buyer', phone: '919876543210' }, other: { id: 'u-other', phone: '919000000000' }, staff: { id: 'u-staff' }, prod: { id: 'u-prod' } };
+const USERS: Record<string, Row> = { buyer: { id: 'u-buyer', phone: '919876543210' }, other: { id: 'u-other', phone: '919000000000' }, staff: { id: 'u-staff' }, prod: { id: 'u-prod' }, mail: { id: 'u-mail', email: 'm@x.in' } };
 const ok = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 
 const fakeFetch = (async (input: RequestInfo | URL, init: RequestInit = {}) => {
@@ -279,6 +280,11 @@ describe('cart of standard products', () => {
     expect(r.status, JSON.stringify(await r.clone().json())).toBe(200);
     const line = db.order_items.filter((i) => i.order_id === db.orders.at(-1)!.id)[0];
     expect(line).toMatchObject({ description: 'Few left (pack of 50), 40 made to order', qty: 2, product_id: 'prod-2', pack_qty: 50 });
+  });
+
+  it('gives Razorpay the delivery mobile of a buyer who signed in by e-mail', async () => {
+    const out = await (await shop().checkoutCart(post('mail', { lines: [{ productId: 'prod-1', packQty: 25, count: 1 }], pincode: '622001' }))).json();
+    expect(out.prefill).toEqual({ contact: '+919123456789', email: 'm@x.in' });
   });
 
   it('refuses switched-off products, missing packs and empty carts', async () => {

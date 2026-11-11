@@ -202,6 +202,13 @@ export function createShop(d: ShopDeps) {
     };
   };
 
+  /** Mobile for Razorpay's form: the signed-in phone, else (e-mail buyers) the delivery mobile on their customer record. */
+  const contactOf = async (u: { id: string; phone: string }, known?: unknown): Promise<string> => {
+    const raw = u.phone || String(known ?? '') || (await c.rest<Row[]>(`customers?org_id=eq.${org}&user_id=eq.${u.id}&deleted_at=is.null&select=phone&limit=1`))[0]?.phone;
+    const d = String(raw || '').replace(/\D/g, '');
+    return d.length === 10 ? `91${d}` : d;
+  };
+
   return {
     /** Buyer pays the amount due on one of their own orders. Body: { orderId } */
     payOrder: wrap(async (req) => {
@@ -210,7 +217,7 @@ export function createShop(d: ShopDeps) {
       const o = await loadOrder(c, org, String(orderId || ''));
       if (o.customer.user_id !== u.id) bad(404, 'Order not found.');
       if (o.order.status === 'cancelled') bad(400, 'This order is cancelled.');
-      return json(200, await checkoutFor(o.order.id, o.order.number, o.view.due, u.phone, String(o.customer.email || '')));
+      return json(200, await checkoutFor(o.order.id, o.order.number, o.view.due, await contactOf(u, o.customer.phone), String(o.customer.email || u.email || '')));
     }),
 
     /** Buyer orders a custom box from the price page. Body: { length, width, height, gradeId, colours, qty, pincode } */
@@ -265,7 +272,7 @@ export function createShop(d: ShopDeps) {
         p_artwork: artwork,
       });
       const total = checkoutTotals(p.amount, delivery, TAX_PCT).total;
-      return json(200, await checkoutFor(made.id, made.number, advanceAmount(total, shop.advancePct), u.phone, u.email));
+      return json(200, await checkoutFor(made.id, made.number, advanceAmount(total, shop.advancePct), await contactOf(u), u.email));
     }),
 
     /** Buyer checks out the cart of standard products. Body: { lines: [{ productId, packQty, count }], pincode } */
@@ -303,7 +310,7 @@ export function createShop(d: ShopDeps) {
         p_notes: 'Ordered on the website (standard boxes)',
       });
       const total = checkoutTotals(priced.goods, delivery, TAX_PCT).total;
-      return json(200, await checkoutFor(made.id, made.number, advanceAmount(total, shop.advancePct), u.phone, u.email));
+      return json(200, await checkoutFor(made.id, made.number, advanceAmount(total, shop.advancePct), await contactOf(u), u.email));
     }),
 
     /** Browser reports a finished checkout. Records the payment if Razorpay says it is captured (the webhook does it otherwise). */
