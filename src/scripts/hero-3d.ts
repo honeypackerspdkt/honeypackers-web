@@ -229,6 +229,7 @@ export async function mountHero3d(stage: HTMLElement, cssBox: HTMLElement): Prom
   const right = side(13);
   const left = side(14);
   const flapCv = kraft(W * PX, (D / 2) * PX, p.base, p, 15, 0.93);
+  const minorCv = kraft(D * PX, (D / 2) * PX, p.base, p, 17, 0.93);
   const inside = kraft(512, 512, p.lo, p, 16, 0.82);
   const fl = flutes(p);
 
@@ -238,6 +239,7 @@ export async function mountHero3d(stage: HTMLElement, cssBox: HTMLElement): Prom
     right: board(right.map, right.bump),
     left: board(left.map, left.bump),
     flap: board(flapCv.map, flapCv.bump, 0.84),
+    minor: board(minorCv.map, minorCv.bump, 0.84),
   };
   const innerMat = new MeshStandardMaterial({ map: texture(inside.map, true, [2, 2]), bumpMap: texture(inside.bump, false, [2, 2]), bumpScale: 0.6, roughness: 0.95, envMapIntensity: 0.3 });
   const edge = (len: number) => new MeshStandardMaterial({ map: texture(fl, true, [len / 8, 1]), roughness: 0.95, envMapIntensity: 0.3 });
@@ -274,10 +276,10 @@ export async function mountHero3d(stage: HTMLElement, cssBox: HTMLElement): Prom
   const shadowed = (m: Mesh) => ((m.castShadow = true), (m.receiveShadow = true), m);
   // BoxGeometry face order: +x, -x, +y, -y, +z, -z
   const wallH = H - T;
-  const frontWall = shadowed(new Mesh(new BoxGeometry(W, wallH, T), [plainEdge, plainEdge, edge(W), plainEdge, outer.front, innerMat]));
-  frontWall.position.set(0, -T / 2, D / 2 - T / 2);
-  const backWall = shadowed(new Mesh(new BoxGeometry(W, wallH, T), [plainEdge, plainEdge, edge(W), plainEdge, innerMat, outer.back]));
-  backWall.position.set(0, -T / 2, -D / 2 + T / 2);
+  const frontWall = shadowed(new Mesh(new BoxGeometry(W, H, T), [plainEdge, plainEdge, edge(W), plainEdge, outer.front, innerMat]));
+  frontWall.position.set(0, 0, D / 2 - T / 2);
+  const backWall = shadowed(new Mesh(new BoxGeometry(W, H, T), [plainEdge, plainEdge, edge(W), plainEdge, innerMat, outer.back]));
+  backWall.position.set(0, 0, -D / 2 + T / 2);
   const rightWall = shadowed(new Mesh(new BoxGeometry(T, wallH, D - 2 * T), [outer.right, innerMat, edge(D), plainEdge, plainEdge, plainEdge]));
   rightWall.position.set(W / 2 - T / 2, -T / 2, 0);
   const leftWall = shadowed(new Mesh(new BoxGeometry(T, wallH, D - 2 * T), [innerMat, outer.left, edge(D), plainEdge, plainEdge, plainEdge]));
@@ -286,35 +288,51 @@ export async function mountHero3d(stage: HTMLElement, cssBox: HTMLElement): Prom
   bottom.position.set(0, -H / 2 + T, 0);
   root.add(frontWall, backWall, rightWall, leftWall, bottom);
 
-  const tapeW = W * 0.16;
-  const tape = (len: number) => {
-    const m = new Mesh(new BoxGeometry(tapeW, 0.6, len), tapeMat);
-    m.castShadow = false;
+  // Top of a regular slotted carton: two short side flaps fold in first (on the side walls), the two long flaps close
+  // over them and meet in the middle; the tape runs along that join and down both short sides.
+  const tapeW = D * 0.2;
+  const tapeMesh = (x: number, y: number, z: number) => {
+    const m = new Mesh(new BoxGeometry(x, y, z), tapeMat);
     m.receiveShadow = true;
     return m;
   };
-  // flaps hinge on the back (A) and front (B) top edges; their tape halves split when the lid opens
+  // short side flaps, hinged on the side walls' top edges
+  const minorGeo = new BoxGeometry(D / 2, T, D - 2 * T);
+  const minor = (sign: 1 | -1) => {
+    const pivot = new Group();
+    pivot.position.set((sign * W) / 2, H / 2 - T / 2, 0);
+    const m = shadowed(new Mesh(minorGeo, sign > 0
+      ? [plainEdge, edge(D), outer.minor, innerMat, plainEdge, plainEdge]
+      : [edge(D), plainEdge, outer.minor, innerMat, plainEdge, plainEdge]));
+    m.position.set((-sign * D) / 4, 0, 0);
+    pivot.add(m);
+    root.add(pivot);
+    return pivot;
+  };
+  const minorR = minor(1);
+  const minorL = minor(-1);
+  // long flaps on the back (A) and front (B) top edges, each carrying its half of the tape
   const flapGeo = new BoxGeometry(W, T, D / 2);
   const flap = (sign: 1 | -1) => {
     const pivot = new Group();
-    pivot.position.set(0, H / 2 - T / 2, (sign * D) / 2);
+    pivot.position.set(0, H / 2 + T / 2, (sign * D) / 2);
     const m = shadowed(new Mesh(flapGeo, [plainEdge, plainEdge, outer.flap, innerMat, sign > 0 ? plainEdge : edge(W), sign > 0 ? edge(W) : plainEdge]));
     m.position.set(0, 0, (-sign * D) / 4);
-    const t = tape(D / 2);
-    t.position.set(0, T / 2 + 0.3, (-sign * D) / 4);
+    const t = tapeMesh(W + 1.2, 0.6, tapeW / 2);
+    t.position.set(0, T / 2 + 0.3, -sign * (D / 2 - tapeW / 4));
     pivot.add(m, t);
     root.add(pivot);
     return pivot;
   };
   const flapA = flap(-1);
   const flapB = flap(1);
-  // tape running down the front and the back
-  const drop = H * 0.24;
-  const frontTape = new Mesh(new BoxGeometry(tapeW, drop, 0.6), tapeMat);
-  frontTape.position.set(0, H / 2 - drop / 2, D / 2 + 0.35);
-  const backTape = frontTape.clone();
-  backTape.position.z = -D / 2 - 0.35;
-  root.add(frontTape, backTape);
+  // tape down both short sides, over the side walls and the side flaps' edges
+  const drop = H * 0.26;
+  for (const sign of [1, -1]) {
+    const t = tapeMesh(0.6, drop, tapeW);
+    t.position.set(sign * (W / 2 + 0.35), H / 2 + T - drop / 2, 0);
+    root.add(t);
+  }
 
   // ───── scene ─────
   const size = Math.round(Math.max(stage.offsetWidth, stage.offsetHeight) * 1.5);
@@ -375,9 +393,15 @@ export async function mountHero3d(stage: HTMLElement, cssBox: HTMLElement): Prom
       // CSS: rotateX(rx) rotateY(ry) rotateZ(rz), y down → three (y up): Rx(-rx) · Ry(ry) · Rz(-rz)
       root.rotation.set(-deg(st.getPropertyValue('--rx'), -19), deg(st.getPropertyValue('--ry'), -32), -deg(st.getPropertyValue('--rz'), 0), 'XYZ');
       root.scale.setScalar(parseFloat(st.getPropertyValue('--zoom')) || 1);
-      const lid = deg(st.getPropertyValue('--lid'), 3);
-      flapA.rotation.x = -lid;
-      flapB.rotation.x = lid;
+      // --lid runs 3° (closed) → 71° (open): the long flaps swing open first, then the side flaps
+      const t = Math.min(1, Math.max(0, ((parseFloat(st.getPropertyValue('--lid')) || 3) - 3) / 68));
+      const ease = (v: number) => v * v * (3 - 2 * v);
+      const major = ease(Math.min(1, t / 0.6)) * ((115 * Math.PI) / 180);
+      const minorA = ease(Math.min(1, Math.max(0, (t - 0.4) / 0.6))) * ((100 * Math.PI) / 180);
+      flapA.rotation.x = -major;
+      flapB.rotation.x = major;
+      minorR.rotation.z = -minorA;
+      minorL.rotation.z = minorA;
       renderer.render(scene, camera);
     }
     if (visible) requestAnimationFrame(draw);
