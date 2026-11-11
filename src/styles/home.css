@@ -105,14 +105,15 @@
 .promo:hover { transform: translateY(-5px); box-shadow: var(--shadow-lift); color: var(--brand); }
 .promo--brown { background: var(--brand); color: #fff; border-color: var(--brand); }
 .promo--brown:hover { color: #fff; }
-.promo--orange { background: linear-gradient(150deg, var(--orange), color-mix(in oklab, var(--orange) 80%, var(--brand))); color: #fff; border-color: transparent; }
-.promo--orange:hover { color: #fff; }
+.promo--orange { background: linear-gradient(150deg, color-mix(in oklab, var(--orange) 22%, white), color-mix(in oklab, var(--orange) 38%, white)); color: var(--brand); border-color: color-mix(in oklab, var(--orange) 30%, white); }
+.promo--orange:hover { color: var(--brand); }
 .promo small { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.85; }
 .promo h3 { margin: 8px 0 0; font: 800 clamp(1.5rem, 2.2vw, 2rem) / 1.08 var(--font-body); letter-spacing: -0.04em; color: inherit; max-width: 15ch; }
 .promo__art { position: absolute; right: -8%; bottom: 46px; width: 62%; z-index: -1; pointer-events: none; }
 .promo__art svg { width: 100%; height: auto; display: block; }
 .promo b { justify-self: start; display: inline-flex; gap: 10px; align-items: center; padding: 10px 16px; border-radius: 999px; background: var(--brand); color: #fff; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; }
-.promo--brown b, .promo--orange b { background: #fff; color: var(--brand); }
+.promo--brown b { background: #fff; color: var(--brand); }
+.promo--orange b { background: var(--brand); color: #fff; }
 @media (max-width: 900px) { .promos__grid { grid-template-columns: 1fr; } .promo { min-height: 210px; } .promo__art { width: 44%; bottom: 20px; right: 2%; } }
 
 /* ───── packaging categories ───── */
