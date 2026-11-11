@@ -62,15 +62,15 @@ function kraft(w: number, h: number, colour: string, p: Palette, seed: number, s
     const tone = r() > 0.5 ? p.hi : p.lo;
     g.addColorStop(0, tone);
     g.addColorStop(1, 'transparent');
-    c.globalAlpha = 0.08 + r() * 0.1;
+    c.globalAlpha = 0.015 + r() * 0.02;
     c.fillStyle = g;
     c.fillRect(x - rad, y - rad, rad * 2, rad * 2);
   }
   // fibres: short streaks, mostly along the machine direction
-  for (let i = 0; i < (w * h) / 420; i++) {
+  for (let i = 0; i < (w * h) / 900; i++) {
     const x = r() * w, y = r() * h, len = 4 + r() * 22, a = (r() - 0.5) * 0.5;
-    const light = r() > 0.55;
-    c.globalAlpha = 0.07 + r() * 0.12;
+    const light = r() > 0.35;
+    c.globalAlpha = 0.03 + r() * 0.05;
     c.strokeStyle = light ? p.hi : p.dark;
     c.lineWidth = 0.5 + r() * 0.9;
     c.beginPath();
@@ -91,18 +91,18 @@ function kraft(w: number, h: number, colour: string, p: Palette, seed: number, s
   const img = c.getImageData(0, 0, w, h);
   const bim = b.getImageData(0, 0, w, h);
   for (let i = 0; i < img.data.length; i += 4) {
-    const n = (r() - 0.5) * 34;
+    const n = (r() - 0.5) * 10;
     img.data[i] = Math.max(0, Math.min(255, img.data[i] * shade + n));
     img.data[i + 1] = Math.max(0, Math.min(255, img.data[i + 1] * shade + n));
     img.data[i + 2] = Math.max(0, Math.min(255, img.data[i + 2] * shade + n * 0.8));
-    const bn = bim.data[i] + (r() - 0.5) * 60;
+    const bn = bim.data[i] + (r() - 0.5) * 30;
     bim.data[i] = bim.data[i + 1] = bim.data[i + 2] = Math.max(0, Math.min(255, bn));
   }
   c.putImageData(img, 0, 0);
   b.putImageData(bim, 0, 0);
   // faint corrugation showing through the liner (flutes run across the panel)
-  c.globalAlpha = 0.05;
-  b.globalAlpha = 0.18;
+  c.globalAlpha = 0.025;
+  b.globalAlpha = 0.14;
   for (let x = 0; x < w; x += 9) {
     c.fillStyle = p.dark;
     c.fillRect(x, 0, 2, h);
@@ -111,26 +111,6 @@ function kraft(w: number, h: number, colour: string, p: Palette, seed: number, s
   }
   c.globalAlpha = b.globalAlpha = 1;
   return { map, bump };
-}
-
-/** Darker, worn edges and a little dirt near the bottom of a panel. */
-function wear(cv: HTMLCanvasElement, p: Palette) {
-  const c = cv.getContext('2d')!;
-  const { width: w, height: h } = cv;
-  const e = Math.min(w, h) * 0.05;
-  const edge = (x0: number, y0: number, x1: number, y1: number) => {
-    const g = c.createLinearGradient(x0, y0, x1, y1);
-    g.addColorStop(0, p.dark);
-    g.addColorStop(1, 'transparent');
-    c.globalAlpha = 0.35;
-    c.fillStyle = g;
-    c.fillRect(Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0) || w, Math.abs(y1 - y0) || h);
-  };
-  edge(0, 0, e, 0);
-  edge(w, 0, w - e, 0);
-  edge(0, 0, 0, e);
-  edge(0, h, 0, h - e * 1.6);
-  c.globalAlpha = 1;
 }
 
 /** Ink printed on board: the shapes are drawn on their own canvas, speckled, then multiplied onto the kraft. */
@@ -143,7 +123,7 @@ function ink(cv: HTMLCanvasElement, draw: (c: CanvasRenderingContext2D) => void,
   draw(l);
   l.globalCompositeOperation = 'destination-out';
   for (let i = 0; i < (layer.width * layer.height) / 220; i++) {
-    l.globalAlpha = r() * 0.5;
+    l.globalAlpha = r() * 0.15;
     l.fillRect(r() * layer.width, r() * layer.height, 1 + r() * 2, 1 + r() * 2);
   }
   const c = cv.getContext('2d')!;
@@ -185,7 +165,7 @@ function texture(cv: HTMLCanvasElement, srgb = true, repeat?: [number, number]):
 }
 
 function board(map: HTMLCanvasElement, bump: HTMLCanvasElement, rough = 0.88): MeshStandardMaterial {
-  return new MeshStandardMaterial({ map: texture(map), bumpMap: texture(bump, false), bumpScale: 1.4, roughness: rough, metalness: 0, envMapIntensity: 0.22 });
+  return new MeshStandardMaterial({ map: texture(map), bumpMap: texture(bump, false), bumpScale: 0.6, roughness: rough, metalness: 0, envMapIntensity: 0.22 });
 }
 
 export async function mountHero3d(stage: HTMLElement, cssBox: HTMLElement): Promise<void> {
@@ -209,7 +189,6 @@ export async function mountHero3d(stage: HTMLElement, cssBox: HTMLElement): Prom
 
   // ───── surfaces ─────
   const front = kraft(W * PX, H * PX, p.base, p, 11, 0.9);
-  wear(front.map, p);
   ink(front.map, (c) => {
     const s = W * PX;
     c.fillStyle = p.ink;
@@ -233,10 +212,8 @@ export async function mountHero3d(stage: HTMLElement, cssBox: HTMLElement): Prom
     }
   }, 21);
   const back = kraft(W * PX, H * PX, p.base, p, 12, 0.88);
-  wear(back.map, p);
   const side = (seed: number) => {
     const k = kraft(D * PX, H * PX, p.base, p, seed, 0.88);
-    wear(k.map, p);
     ink(k.map, (c) => {
       const s = H * PX;
       c.fillStyle = p.ink;
