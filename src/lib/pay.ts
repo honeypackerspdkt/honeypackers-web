@@ -41,6 +41,8 @@ function loadCheckout(): Promise<RazorpayCtor> {
 export async function callFn<T>(name: string, token: string, body: unknown): Promise<T> {
   const r = await fetch(`/.netlify/functions/${name}`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` }, body: JSON.stringify(body) });
   const out = (await r.json().catch(() => ({}))) as T & { error?: string };
+  // 404: the payment server is not running here (plain local preview without Netlify Functions)
+  if (r.status === 404 && !out.error) throw new Error('Online payment is not available on this preview. Please pay on the live website.');
   if (!r.ok && r.status !== 202) throw new Error(out.error || 'Something went wrong. Please try again.');
   return out;
 }
