@@ -59,6 +59,7 @@
 .hx__stage { position: absolute; top: 52%; left: 50%; width: 600px; height: 600px; perspective: 1400px; transform: translate(calc(-50% + var(--shift, 22vw)), -50%); pointer-events: none; will-change: transform; }
 .hx__orbit { position: absolute; left: -10px; top: 215px; width: 620px; height: 170px; border: 1px solid color-mix(in oklab, var(--orange) 45%, transparent); border-radius: 50%; transform: rotate(-22deg) rotateX(66deg); }
 .hx__shadow { position: absolute; top: 80%; left: 50%; width: 300px; height: 32px; transform: translateX(-50%); border-radius: 50%; background: color-mix(in oklab, var(--brand) 45%, transparent); filter: blur(22px); }
+.hx__stage--gl .hx__shadow { opacity: 0.45; }
 .hx__slides { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
 .hx__slide { position: absolute; top: 52%; left: 7%; width: min(48%, 640px); transform: translate3d(var(--x, 0), calc(-50% + var(--y, 0px)), 0); will-change: transform, opacity, filter; }
 .hx__slide--r { left: auto; right: 7%; text-align: right; }
@@ -87,7 +88,7 @@
   .hx__meta span:last-child { display: none; }
   .hx__meta { top: 22px; }
   .hx__word { top: 28%; font-size: 26vw; }
-  .hx__stage { top: 30%; transform: translate(-50%, -50%) scale(0.6) !important; }
+  .hx__stage { top: 28%; transform: translate(-50%, -50%) scale(0.52) !important; }
   .hx__slides { top: auto; height: 56%; }
   .hx__slide, .hx__slide--r { left: 6%; right: 6%; width: auto; top: 46%; text-align: center; }
   .hx__slide .hx-k, .hx__slide .hx__acts, .hx__facts { justify-content: center !important; }

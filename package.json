@@ -18,10 +18,12 @@
     "@rajesh-hub/web-growth": "file:../rajesh-hub/packages/web-growth",
     "@supabase/supabase-js": "^2.119.0",
     "astro": "^7.4.7",
-    "jspdf": "^4.2.1"
+    "jspdf": "^4.2.1",
+    "three": "0.186.1"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.6",
+    "@types/three": "0.186.0",
     "typescript": "~5.6.2",
     "vitest": "^5.0.5"
   }
