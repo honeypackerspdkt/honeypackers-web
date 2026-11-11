@@ -8,7 +8,7 @@ import { bindSignInForm, codeHint, targetLabel } from '../lib/signin-form';
 import type { SignInTarget } from '../lib/account-api';
 import { icon } from '../lib/icons';
 import { esc, rs } from '../lib/product-card';
-import { rememberMe, signOutEverywhere } from '../lib/me';
+import { forgetMe, rememberMe, signOutEverywhere } from '../lib/me';
 
 const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 const message = (e: unknown) => {
@@ -303,9 +303,10 @@ export async function initCheckout(root: HTMLElement) {
   else {
     try {
       if (await (await getApi()).signedIn()) await signedInView();
-      else showStep('phone');
+      else (showStep('phone'), forgetMe());
     } catch {
       showStep('phone');
+      forgetMe();
     }
   }
   render();

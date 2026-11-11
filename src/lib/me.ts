@@ -21,11 +21,12 @@ const hasSession = () => {
 
 export function cachedMe(): MeCache | null {
   if (!hasSession()) return null;
+  // only once this site has seen the sign-in (rememberMe); an old or expired session alone does not count
   try {
     const v = JSON.parse(localStorage.getItem(KEY) || 'null') as MeCache | null;
-    return v && typeof v.contact === 'string' ? v : { name: '', contact: '' };
+    return v && typeof v.contact === 'string' ? v : null;
   } catch {
-    return { name: '', contact: '' };
+    return null;
   }
 }
 

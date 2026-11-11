@@ -295,5 +295,6 @@ export async function initAccount(root: HTMLElement) {
   } catch {
     /* not signed in */
   }
+  forgetMe(); // an expired sign-in: the header should say "sign in" too
   show('phone');
 }
