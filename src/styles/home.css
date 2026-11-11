@@ -35,7 +35,7 @@
 .cbox .code { position: absolute; right: 7%; bottom: 9%; width: 22%; height: 11%; background: repeating-linear-gradient(90deg, var(--carton-ink) 0 2px, transparent 2px 4px, var(--carton-ink) 4px 5px, transparent 5px 9px); opacity: 0.55; }
 
 /* ───── hero ───── */
-.hx { position: relative; height: 150vh; min-height: 840px; background: var(--stage); color: var(--stage-ink); isolation: isolate; }
+.hx { position: relative; height: 125vh; min-height: 740px; background: var(--stage); color: var(--stage-ink); isolation: isolate; }
 .hx__sticky { position: sticky; top: var(--hdr, 0px); height: calc(100vh - var(--hdr, 0px)); height: calc(100dvh - var(--hdr, 0px)); min-height: 600px; overflow: hidden;
   background: radial-gradient(ellipse 60% 58% at 60% 50%, var(--orange-100) 0, var(--orange-50) 38%, var(--stage) 78%); }
 .hx__grid { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(var(--stage-line) 1px, transparent 1px), linear-gradient(90deg, var(--stage-line) 1px, transparent 1px); background-size: 80px 80px; opacity: 0.35; mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%); }
@@ -69,7 +69,7 @@
 
 @media (max-width: 1100px) { .hx__stage { transform: translate(calc(-50% + var(--shift, 18vw)), -50%) scale(0.82); } .hx__slide { width: 54%; } }
 @media (max-width: 820px) {
-  .hx { height: 145vh; min-height: 790px; }
+  .hx { height: 122vh; min-height: 700px; }
   .hx__meta span:last-child { display: none; }
   .hx__meta { top: 22px; }
   .hx__word { top: 28%; font-size: 26vw; }
