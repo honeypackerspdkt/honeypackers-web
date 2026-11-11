@@ -33,8 +33,8 @@ npm install
 ## Run
 | Command | What |
 |---|---|
-| `npm run dev` | Dev server with live reload: http://localhost:4321 |
-| `npm run build && npx astro preview` | The real built site: http://localhost:4321 |
+| `npm run dev:all` | Site and admin with live reload on one localhost: http://localhost:4322/ and http://localhost:4322/admin/ |
+| `npm run build && npx astro preview` | The real built site (Astro's preview port, usually http://localhost:4321) |
 | `npx astro preview --host` | Same, reachable from your phone on the same Wi-Fi (use the "Network" address) |
 | `npm test` | Unit tests (vitest, 36 tests) |
 | `npm run check` | Type check (`astro check`, expect 0 errors) |

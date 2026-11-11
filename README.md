@@ -36,7 +36,7 @@ Clone the two linked repos next to this one, then:
 git clone https://github.com/yuvarajeshsp-cloud/rajesh-hub ../rajesh-hub
 git clone https://github.com/yuvarajeshsp-cloud/BoxBook ../BoxBook     # box-core lives on BoxBook's branch until merged
 npm install
-npm run dev        # http://localhost:4321
+npm run dev:all    # site http://localhost:4322/ and admin http://localhost:4322/admin/ (npm run dev: site only)
 npm test           # vitest: 3D drawing, price list loading, quote text, My orders (rows → orders, totals, invoice)
 npm run check      # astro check (types)
 npm run build
