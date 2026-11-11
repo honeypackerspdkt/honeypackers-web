@@ -25,7 +25,8 @@ Overall plan: `admin/docs/online-business-plan.md`. Site, admin (`admin/`), data
   regular slotted carton (side flaps fold in first, long flaps meet in the middle, tape along the join and down the short sides,
   clean kraft board drawn on canvases, prints / customer artwork as pictures on the sides via box-core `SIDE_CORNERS`).
   Its camera matches box-core `project()` (radius 96 in the 360 × 290 picture, distance 6), so the SVG size lines line up.
-  Used by: `scripts/hero-3d.ts` (hero + the box following down the home page, Honey Packers print, opens on scroll);
+  Used by: `scripts/hero-3d.ts` (hero + the box following down the home page, Honey Packers print, opens on scroll; also the home
+  box calculator preview `.bb__stage`, plain, rebuilt when its --bw/--bh/--bd change);
   `scripts/carton-tiles.ts` (loaded on every page by `Base.astro`: swaps each `svg[data-carton]` tile for a rendered picture
   when it nears the screen, one hidden renderer); `lib/carton-live.ts` (product page + custom box: live canvas behind the
   draggable SVG, which then draws only the size lines, `boxSvgInner(..., bare = true)`). Without WebGL the SVG / CSS boxes stay.

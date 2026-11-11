@@ -269,6 +269,8 @@
 }
 
 /* hero carton: the CSS box waits hidden for the 3D one (html.gl-wait); stays if 3D cannot load (.hx__stage--css) */
-.gl-wait .hx__stage:not(.hx__stage--gl):not(.hx__stage--css) .cbox { visibility: hidden; }
+.gl-wait .hx__stage:not(.hx__stage--gl):not(.hx__stage--css) .cbox,
+.gl-wait .bb__stage:not(.hx__stage--gl):not(.hx__stage--css) .cbox { visibility: hidden; }
+.bb__stage .hx__gl { animation: carton-in 0.4s ease-out both, bb-float 7s ease-in-out infinite; }
 .hx__gl { animation: carton-in 0.4s ease-out both; }
-@media (prefers-reduced-motion: reduce) { .hx__gl { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .hx__gl, .bb__stage .hx__gl { animation: none; } }

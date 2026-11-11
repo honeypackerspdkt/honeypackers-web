@@ -8,19 +8,25 @@ import { buildCarton, canvasTexture, lightScene, makeRenderer, palette, printLay
  * and this scene copies them every frame, so the scroll story is unchanged. The CSS carton is hidden once the
  * 3D one has drawn; without WebGL nothing changes.
  */
-export async function mountHero3d(stage: HTMLElement, cssBox: HTMLElement): Promise<void> {
+export async function mountHero3d(stage: HTMLElement, cssBox: HTMLElement, opts: { print?: boolean } = {}): Promise<void> {
   if (!webglOk()) return;
   await document.fonts?.ready;
 
-  const W = parseFloat(getComputedStyle(cssBox).getPropertyValue('--bw')) || 340;
-  const H = parseFloat(getComputedStyle(cssBox).getPropertyValue('--bh')) || 250;
-  const D = parseFloat(getComputedStyle(cssBox).getPropertyValue('--bd')) || 250;
+  const print = opts.print ?? true;
+  // size: the CSS carton's --bw / --bh / --bd (the box calculator changes them inline as you type)
+  const cs = getComputedStyle(cssBox);
+  const start = { W: parseFloat(cs.getPropertyValue('--bw')) || 340, H: parseFloat(cs.getPropertyValue('--bh')) || 250, D: parseFloat(cs.getPropertyValue('--bd')) || 250 };
+  const sizeOf = () => ({
+    W: parseFloat(cssBox.style.getPropertyValue('--bw')) || start.W,
+    H: parseFloat(cssBox.style.getPropertyValue('--bh')) || start.H,
+    D: parseFloat(cssBox.style.getPropertyValue('--bd')) || start.D,
+  });
   const p = palette();
   const PX = 3; // print pixels per unit
 
   // ───── print: brand on the front, handling marks on the short sides ─────
   type Ctx = CanvasRenderingContext2D & { letterSpacing?: string };
-  const frontPrint = printLayer(W * PX, H * PX, (c0) => {
+  const frontPrint = (W: number, H: number) => printLayer(W * PX, H * PX, (c0) => {
     const c = c0 as Ctx;
     const s = W * PX;
     c.fillStyle = p.ink;
@@ -43,7 +49,7 @@ export async function mountHero3d(stage: HTMLElement, cssBox: HTMLElement): Prom
       i += lw + (1 + Math.floor(r() * 3)) * PX;
     }
   }, 21);
-  const sidePrint = (seed: number) =>
+  const sidePrint = (D: number, H: number, seed: number) =>
     printLayer(D * PX, H * PX, (c) => {
       const s = H * PX;
       c.fillStyle = p.ink;
@@ -55,13 +61,23 @@ export async function mountHero3d(stage: HTMLElement, cssBox: HTMLElement): Prom
       c.fillText('KEEP DRY', D * PX * 0.66, s * 0.27);
     }, seed, 0.8);
 
-  const carton = buildCarton(W, H, D, { tape: true });
-  carton.setArt({ front: canvasTexture(frontPrint), right: canvasTexture(sidePrint(22)), left: canvasTexture(sidePrint(23)) });
   const root = new Group();
-  root.add(carton.group);
+  let carton: ReturnType<typeof buildCarton> | null = null;
+  let H = start.H;
+  const build = ({ W, H: h, D }: { W: number; H: number; D: number }) => {
+    if (carton) {
+      root.remove(carton.group);
+      carton.dispose();
+    }
+    H = h;
+    carton = buildCarton(W, H, D, { tape: true });
+    if (print) carton.setArt({ front: canvasTexture(frontPrint(W, H)), right: canvasTexture(sidePrint(D, H, 22)), left: canvasTexture(sidePrint(D, H, 23)) });
+    root.add(carton.group);
+    floor.position.y = -H * 0.78;
+  };
 
   // ───── scene ─────
-  const size = Math.round(Math.max(stage.offsetWidth, stage.offsetHeight) * 1.5);
+  let size = Math.round(Math.max(stage.offsetWidth, stage.offsetHeight) * 1.5);
   const canvas = document.createElement('canvas');
   canvas.className = 'hx__gl';
   canvas.setAttribute('aria-hidden', 'true');
@@ -72,10 +88,12 @@ export async function mountHero3d(stage: HTMLElement, cssBox: HTMLElement): Prom
 
   const scene = new Scene();
   lightScene(scene, renderer, 620);
-  scene.add(shadowFloor(-H * 0.78, 2400), root);
+  const floor = shadowFloor(-H * 0.78, 2400);
+  scene.add(floor, root);
+  build(start);
 
-  // same perspective as the CSS stage (1400px), in CSS pixels
-  const persp = 1400;
+  // same perspective as the CSS stage, in CSS pixels
+  const persp = parseFloat(getComputedStyle(stage).perspective) || 1400;
   const camera = new PerspectiveCamera((2 * Math.atan(size / 2 / persp) * 180) / Math.PI, 1, 10, 6000);
   camera.position.set(0, 0, persp);
 
@@ -85,18 +103,31 @@ export async function mountHero3d(stage: HTMLElement, cssBox: HTMLElement): Prom
   let visible = true;
   const draw = () => {
     const st = cssBox.style;
-    const key = `${st.getPropertyValue('--ry')}|${st.getPropertyValue('--rx')}|${st.getPropertyValue('--rz')}|${st.getPropertyValue('--zoom')}|${st.getPropertyValue('--lid')}`;
+    const sz = sizeOf();
+    const key = `${sz.W}|${sz.H}|${sz.D}|${size}|${st.getPropertyValue('--ry')}|${st.getPropertyValue('--rx')}|${st.getPropertyValue('--rz')}|${st.getPropertyValue('--zoom')}|${st.getPropertyValue('--lid')}`;
     if (key !== last) {
+      if (!last.startsWith(`${sz.W}|${sz.H}|${sz.D}|`)) build(sz);
       last = key;
       // CSS: rotateX(rx) rotateY(ry) rotateZ(rz), y down → three (y up): Rx(-rx) · Ry(ry) · Rz(-rz)
       root.rotation.set(-deg(st.getPropertyValue('--rx'), -19), deg(st.getPropertyValue('--ry'), -32), -deg(st.getPropertyValue('--rz'), 0), 'XYZ');
       root.scale.setScalar(parseFloat(st.getPropertyValue('--zoom')) || 1);
       // --lid runs 3° (closed) → 71° (open)
-      carton.setOpen(((parseFloat(st.getPropertyValue('--lid')) || 3) - 3) / 68);
+      carton!.setOpen(((parseFloat(st.getPropertyValue('--lid')) || 3) - 3) / 68);
       renderer.render(scene, camera);
     }
     if (visible) requestAnimationFrame(draw);
   };
+
+  // the box calculator's stage changes width with the page
+  new ResizeObserver(() => {
+    const s = Math.round(Math.max(stage.offsetWidth, stage.offsetHeight) * 1.5);
+    if (!s || s === size) return;
+    size = s;
+    Object.assign(canvas.style, { width: `${size}px`, height: `${size}px` });
+    renderer.setSize(size, size, false);
+    camera.fov = (2 * Math.atan(size / 2 / persp) * 180) / Math.PI;
+    camera.updateProjectionMatrix();
+  }).observe(stage);
 
   stage.append(canvas);
   renderer.render(scene, camera);

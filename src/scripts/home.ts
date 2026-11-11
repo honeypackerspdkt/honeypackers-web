@@ -48,9 +48,16 @@ function motion() {
 
   // The hero carton as a real 3D object (three.js), loaded after the page; it follows this CSS carton's animation.
   // The CSS carton stays hidden meanwhile (html.gl-wait) so a reload never shows one box and then the other.
-  const fallback = () => [stage, ambStage].forEach((s) => s.classList.contains('hx__stage--gl') || s.classList.add('hx__stage--css'));
+  const stages = [stage, ambStage];
+  const fallback = () => stages.forEach((s) => s.classList.contains('hx__stage--gl') || s.classList.add('hx__stage--css'));
   import('./hero-3d')
-    .then((m) => Promise.all([m.mountHero3d(stage, box), m.mountHero3d(ambStage, ambBox)]))
+    .then((m) => {
+      // the box calculator's preview too: a plain carton (the customer's box), resized as they type
+      const bbStage = document.querySelector<HTMLElement>('.bb__stage');
+      const bbBox = bbStage?.querySelector<HTMLElement>('[data-bb-box]');
+      if (bbStage && bbBox) stages.push(bbStage);
+      return Promise.all([m.mountHero3d(stage, box), m.mountHero3d(ambStage, ambBox), bbStage && bbBox ? m.mountHero3d(bbStage, bbBox, { print: false }) : null]);
+    })
     .catch((e) => console.warn('[hero-3d] staying with the CSS carton', e))
     .finally(fallback);
 
