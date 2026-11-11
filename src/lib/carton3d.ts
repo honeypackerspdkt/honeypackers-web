@@ -573,6 +573,8 @@ export function snapshot(d: Dims, view: View): Promise<string | null> {
 
 export interface LiveCarton {
   set(d: Dims, view: View, art?: Partial<Record<BoxSide, string>>): void;
+  /** Frees the WebGL context and removes the canvas (when the screen closes). */
+  dispose(): void;
 }
 
 export function mountLive(svg: SVGSVGElement): LiveCarton | null {
@@ -610,7 +612,11 @@ export function mountLive(svg: SVGSVGElement): LiveCarton | null {
     }
     // forget pictures no longer used
     const keep = new Set(Object.values(urls));
-    for (const [url, t] of textures) if (!keep.has(url)) (t.dispose(), textures.delete(url));
+    for (const [url, t] of textures) {
+      if (keep.has(url)) continue;
+      t.dispose();
+      textures.delete(url);
+    }
     stage.show(d, view, art);
   };
 
@@ -630,13 +636,23 @@ export function mountLive(svg: SVGSVGElement): LiveCarton | null {
     stage.renderer.setSize(Math.round(w), Math.round(h), false);
     draw();
   };
-  new ResizeObserver(fit).observe(svg);
+  const ro = new ResizeObserver(fit);
+  ro.observe(svg);
   fit();
 
   return {
     set(d, view, art = {}) {
       last = [d, view, art];
       draw();
+    },
+    dispose() {
+      ro.disconnect();
+      last = null;
+      for (const t of textures.values()) t.dispose();
+      stage.carton?.dispose();
+      stage.renderer.dispose();
+      stage.renderer.forceContextLoss();
+      canvas.remove();
     },
   };
 }
