@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import EnquiryForm from '../components/EnquiryForm.astro';
-import { BOX_W, BOX_H, boxSvgInner } from '../lib/box-svg';
+import { BOX_W, BOX_H, boxSvgInner, cartonData } from '../lib/box-svg';
 import { loadProducts } from '../lib/products';
 import { liveConfig } from '../lib/price-list';
 import { productTile } from '../lib/product-card';
@@ -107,7 +107,7 @@ const faqs = [
         <a class={`promo promo--${p.tone}`} href={p.href} data-preset={p.preset ? '' : undefined} data-style={p.style} data-print={p.print}>
           <small>{p.kicker}</small>
           <h3>{p.title}</h3>
-          <div class="promo__art box3d" aria-hidden="true"><svg viewBox={`0 0 ${BOX_W} ${BOX_H}`} set:html={boxSvgInner(p.dims, { yaw: p.yaw, pitch: 0.5 }, false)} /></div>
+          <div class="promo__art box3d" aria-hidden="true"><svg viewBox={`0 0 ${BOX_W} ${BOX_H}`} data-carton={cartonData(p.dims, { yaw: p.yaw, pitch: 0.5 })} set:html={boxSvgInner(p.dims, { yaw: p.yaw, pitch: 0.5 }, false)} /></div>
           <b>{p.cta} <span aria-hidden="true">→</span></b>
         </a>
       ))}
@@ -123,7 +123,7 @@ const faqs = [
       <div class="cats2 chap-item">
         {cats.map((c) => (
           <a class="cat2" href={c.href} data-preset={c.preset ? '' : undefined} data-style={c.style} data-print={c.print}>
-            <div class="cat2__img box3d" aria-hidden="true"><svg viewBox={`0 0 ${BOX_W} ${BOX_H}`} set:html={boxSvgInner(c.dims, { yaw: c.yaw, pitch: 0.5 }, false)} /></div>
+            <div class="cat2__img box3d" aria-hidden="true"><svg viewBox={`0 0 ${BOX_W} ${BOX_H}`} data-carton={cartonData(c.dims, { yaw: c.yaw, pitch: 0.5 })} set:html={boxSvgInner(c.dims, { yaw: c.yaw, pitch: 0.5 }, false)} /></div>
             <div class="cat2__name">{c.name}</div>
             <div class="cat2__note">{c.note}</div>
           </a>

@@ -18,9 +18,10 @@ const fmt = (n: number) => n.toLocaleString('en-IN', { maximumFractionDigits: 1 
  * `art`: a picture (URL) per side, wrapped onto that side when it faces the viewer. The picture is mapped with an
  * affine transform from three corners (the projection's perspective is mild) and clipped to the side's outline.
  */
-export function boxSvgInner(d: Dims, view: View, showDims = true, art: Partial<Record<BoxSide, string>> = {}): string {
+export function boxSvgInner(d: Dims, view: View, showDims = true, art: Partial<Record<BoxSide, string>> = {}, bare = false): string {
   const pr = project(d, view, RADIUS, CX, CY);
   const out: string[] = [];
+  if (bare) return showDims ? dimsSvg(d, pr) : '';
   out.push(`<ellipse class="bx-shadow" cx="${CX}" cy="${f1(CY + RADIUS * 0.92)}" rx="${f1(RADIUS * 1.05)}" ry="${f1(RADIUS * 0.17)}"/>`);
   for (const e of pr.edges.filter((x) => x.hidden)) {
     const a = pr.pts[e.a];
@@ -48,7 +49,14 @@ export function boxSvgInner(d: Dims, view: View, showDims = true, art: Partial<R
     const [a, b, c, dd] = f.idx.map((i) => pr.pts[i]);
     out.push(`<line class="bx-seam" x1="${f1((a.x + b.x) / 2)}" y1="${f1((a.y + b.y) / 2)}" x2="${f1((dd.x + c.x) / 2)}" y2="${f1((dd.y + c.y) / 2)}"/>`);
   }
-  if (showDims) {
+  if (showDims) out.push(dimsSvg(d, pr));
+  return out.join('');
+}
+
+/** Size lines and numbers only (drawn over the live 3D carton). */
+function dimsSvg(d: Dims, pr: ReturnType<typeof project>): string {
+  const out: string[] = [];
+  {
     const values = [d.length, d.height, d.width];
     for (const l of dimensionLines(pr, { x: CX, y: CY }, 15)) {
       if (!l) continue;
@@ -65,5 +73,8 @@ export function boxSvgInner(d: Dims, view: View, showDims = true, art: Partial<R
   }
   return out.join('');
 }
+
+/** `data-carton` value for a tile picture: L,W,H,yaw,pitch (scripts/carton-tiles.ts swaps in the 3D carton). */
+export const cartonData = (d: Dims, view: View) => [d.length, d.width, d.height, view.yaw, view.pitch].join(',');
 
 export const boxLabel = (d: Dims) => `3D box ${fmt(d.length)} by ${fmt(d.width)} by ${fmt(d.height)} mm. Drag or use the arrow keys to turn it.`;

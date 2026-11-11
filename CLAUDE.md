@@ -21,6 +21,14 @@ Overall plan: `admin/docs/online-business-plan.md`. Site, admin (`admin/`), data
   `components/Footer.astro` (trust strip + footer). `lib/icons.ts` (inline SVG), `lib/catalog.ts` (products + price list loaded once per page,
   `productHref`, `fromPrice`), `lib/product-card.ts` (`productTile`), `lib/product-page.ts` (`productPageHtml`, `initProductPage`, `productJsonLd`),
   `lib/add-to-cart.ts`, `scripts/product.ts`, `scripts/checkout.ts`.
+- 3D carton (owner's choice 11 Nov 2026: the same realistic box everywhere): `lib/carton3d.ts` (three.js, pinned 0.186.1) builds a
+  regular slotted carton (side flaps fold in first, long flaps meet in the middle, tape along the join and down the short sides,
+  clean kraft board drawn on canvases, prints / customer artwork as pictures on the sides via box-core `SIDE_CORNERS`).
+  Its camera matches box-core `project()` (radius 96 in the 360 × 290 picture, distance 6), so the SVG size lines line up.
+  Used by: `scripts/hero-3d.ts` (hero + the box following down the home page, Honey Packers print, opens on scroll);
+  `scripts/carton-tiles.ts` (loaded on every page by `Base.astro`: swaps each `svg[data-carton]` tile for a rendered picture
+  when it nears the screen, one hidden renderer); `lib/carton-live.ts` (product page + custom box: live canvas behind the
+  draggable SVG, which then draws only the size lines, `boxSvgInner(..., bare = true)`). Without WebGL the SVG / CSS boxes stay.
 - Theme: `lib/theme.ts` `brandColor(PUBLIC_BRAND_COLOR)` (presets or hex, darkened to 4.5:1 for white text); `Base.astro` sets `--brand`;
   every colour in `brand.css` is mixed from `--brand`.
 - `src/scripts/configurator.ts`: all price-page logic (no framework). `src/lib/box-svg.ts`: 3D box as an SVG string (box-core geometry,

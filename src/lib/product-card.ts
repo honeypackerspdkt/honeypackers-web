@@ -1,7 +1,7 @@
 import { calcBox } from '@honeypackers/box-core/calc';
 import { defaultView } from '@honeypackers/box-core/box3d';
 import type { Product } from '@honeypackers/box-core/types';
-import { BOX_H, BOX_W, boxSvgInner } from './box-svg';
+import { BOX_H, BOX_W, boxSvgInner, cartonData } from './box-svg';
 import { fromPrice } from './catalog';
 
 /** Shop tile for a product (built at build time and again in the browser with live data). */
@@ -23,7 +23,7 @@ export function productTile(p: Product, href: string): string {
   const opts = p.packs.map((k) => `<option value="${k.qty}">${k.qty.toLocaleString('en-IN')} boxes · ${rs(k.price)}</option>`).join('');
   return `<article class="tile" data-product="${esc(p.id)}">
     <a class="tile__media" href="${href}" aria-label="${esc(p.name)}">
-      <svg viewBox="0 0 ${BOX_W} ${BOX_H}" aria-hidden="true" class="box3d">${boxSvgInner({ length: p.spec.length, width: p.spec.width, height: p.spec.height }, defaultView, false)}</svg>
+      <svg viewBox="0 0 ${BOX_W} ${BOX_H}" aria-hidden="true" class="box3d" data-carton="${cartonData({ length: p.spec.length, width: p.spec.width, height: p.spec.height }, defaultView)}">${boxSvgInner({ length: p.spec.length, width: p.spec.width, height: p.spec.height }, defaultView, false)}</svg>
       <span class="tile__tag">${p.ply} ply</span>
       ${st.cls === 'stock-low' ? `<span class="tile__tag tile__tag--stock">${esc(st.text)}</span>` : ''}
     </a>

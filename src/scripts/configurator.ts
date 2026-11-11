@@ -2,6 +2,7 @@ import { checkoutTotals, deliveryCharge, findZone, gradeLabel, priceCustomBox, s
 import { clampPitch, defaultView, SIDE_VIEW, type View } from '@honeypackers/box-core/box3d';
 import { defaultCompany } from '@honeypackers/box-core/company';
 import { boxLabel, boxSvgInner } from '../lib/box-svg';
+import { liveCarton, type LiveHandle } from '../lib/carton-live';
 import { liveConfig, loadPriceList, samplePriceList } from '../lib/price-list';
 import { quoteText } from '../lib/quote-text';
 import { printColours, printKindOf, printKindsFor } from '@honeypackers/box-core/artwork';
@@ -23,6 +24,7 @@ export async function initConfigurator(root: HTMLElement) {
   let view: View = { ...defaultView };
   let canBuy = false;
   let liveLoaded = false;
+  let live: LiveHandle = { on: false, set: () => {} }; // the 3D carton, once three.js has loaded
   const designer = createDesigner(root.querySelector<HTMLElement>('[data-art]')!, {
     change: () => update(),
     // Turn the 3D box to the side being designed.
@@ -98,10 +100,13 @@ export async function initConfigurator(root: HTMLElement) {
   const drawBox = () => {
     const s = read();
     const dims = { length: s.length || 300, width: s.width || 200, height: s.height || 150 };
-    svg.innerHTML = boxSvgInner(dims, view, true, designer.sideArt());
+    const art = designer.sideArt();
+    svg.innerHTML = boxSvgInner(dims, view, true, art, live.on);
+    live.set(dims, view, art);
     svg.setAttribute('aria-label', boxLabel(dims));
     $('[data-box-caption]').textContent = `${inr0.format(dims.length)} × ${inr0.format(dims.width)} × ${inr0.format(dims.height)} mm (L × W × H)`;
   };
+  live = liveCarton(svg, () => drawBox());
 
   const show = (sel: string, on: boolean) => ($(sel).hidden = !on);
 

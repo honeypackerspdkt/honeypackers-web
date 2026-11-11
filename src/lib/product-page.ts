@@ -3,6 +3,7 @@ import { clampPitch, defaultView, type View } from '@honeypackers/box-core/box3d
 import { deliveryCharge, findZone } from '@honeypackers/box-core/pricing';
 import type { Product } from '@honeypackers/box-core/types';
 import { BOX_H, BOX_W, boxLabel, boxSvgInner } from './box-svg';
+import { liveCarton } from './carton-live';
 import { esc, rs, stockText } from './product-card';
 import { icon } from './icons';
 
@@ -133,7 +134,11 @@ export function initProductPage(root: HTMLElement, p: Product, deps: ProductPage
   const dims = { length: p.spec.length, width: p.spec.width, height: p.spec.height };
   let view: View = { ...defaultView };
   let drag: { x: number; y: number } | null = null;
-  const draw = () => (svg.innerHTML = boxSvgInner(dims, view));
+  const draw = () => {
+    svg.innerHTML = boxSvgInner(dims, view, true, {}, live.on);
+    live.set(dims, view);
+  };
+  const live = liveCarton(svg, draw);
   svg.addEventListener('pointerdown', (e) => (svg.setPointerCapture(e.pointerId), (drag = { x: e.clientX, y: e.clientY })));
   svg.addEventListener('pointermove', (e) => {
     if (!drag) return;

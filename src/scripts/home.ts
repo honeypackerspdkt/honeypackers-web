@@ -47,7 +47,7 @@ function motion() {
   document.body.append(amb); // last in the page: above section backgrounds, below content (z-index in home.css)
 
   // The hero carton as a real 3D object (three.js), loaded after the page; it follows this CSS carton's animation.
-  const load3d = () => import('./hero-3d').then((m) => m.mountHero3d(stage, box)).catch((e) => console.warn('[hero-3d] staying with the CSS carton', e));
+  const load3d = () => import('./hero-3d').then((m) => Promise.all([m.mountHero3d(stage, box), m.mountHero3d(ambStage, ambBox)])).catch((e) => console.warn('[hero-3d] staying with the CSS carton', e));
   if ('requestIdleCallback' in window) requestIdleCallback(() => void load3d(), { timeout: 1500 });
   else setTimeout(() => void load3d(), 300);
 
