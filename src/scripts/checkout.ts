@@ -140,7 +140,8 @@ export async function initCheckout(root: HTMLElement) {
     if (mode === 'card') {
       const g = field('gstin').value.trim().toUpperCase();
       const company = field('company').value.trim();
-      const contact = byEmail ? `+91 ${mobile10(field('phone').value)}` : signedPhone;
+      const m = mobile10(field('phone').value);
+      const contact = byEmail ? (m ? `+91 ${m.slice(0, 5)} ${m.slice(5)}` : '') : signedPhone;
       $('[data-addr-text]').innerHTML =
         `<strong>${esc(field('name').value.trim())}</strong>${company ? ` · ${esc(company)}` : ''}<br>` +
         esc(composeAddress(address())).replace(/\n/g, '<br>') +
