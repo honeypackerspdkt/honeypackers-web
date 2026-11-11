@@ -26,8 +26,8 @@ function motion() {
   const idx = hx.querySelector<HTMLElement>('[data-hx-idx]')!;
   const cap = hx.querySelector<HTMLElement>('[data-hx-cap]')!;
   const word = hx.querySelector<HTMLElement>('[data-hx-word]')!;
-  const captions = ['Designed to impress', 'Engineered to protect', 'Built for your brand'];
-  const words = [word.textContent || '', 'Precision', 'Impact'];
+  const captions = ['Designed to impress', 'Built for your brand'];
+  const words = [word.textContent || '', 'Impact'];
   const chapters = [...document.querySelectorAll<HTMLElement>('[data-chapter]')];
   const quote = document.getElementById('quote');
   // The light trust strip above the footer: the carton fades out before it.
