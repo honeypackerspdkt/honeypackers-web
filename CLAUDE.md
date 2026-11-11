@@ -30,6 +30,8 @@ Overall plan: `admin/docs/online-business-plan.md`. Site, admin (`admin/`), data
   `scripts/carton-tiles.ts` (loaded on every page by `Base.astro`: swaps each `svg[data-carton]` tile for a rendered picture
   when it nears the screen, one hidden renderer); `lib/carton-live.ts` (product page + custom box: live canvas behind the
   draggable SVG, which then draws only the size lines, `boxSvgInner(..., bare = true)`). Without WebGL the SVG / CSS boxes stay.
+  The admin's Calculator (`admin/src/Box3D.tsx`) and the BoxBook repo use identical copies (`admin/src/lib/carton3d.ts`,
+  `BoxBook/src/lib/carton3d.ts`): change all three together.
 - Theme: `lib/theme.ts` `brandColor(PUBLIC_BRAND_COLOR)` (presets or hex, darkened to 4.5:1 for white text); `Base.astro` sets `--brand`;
   every colour in `brand.css` is mixed from `--brand`.
 - `src/scripts/configurator.ts`: all price-page logic (no framework). `src/lib/box-svg.ts`: 3D box as an SVG string (box-core geometry,
